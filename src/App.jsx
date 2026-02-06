@@ -176,6 +176,22 @@ function App() {
     }
   }, [])
 
+  const HERO_SLIDE_COUNT = 3 // home, carousel 0, carousel 1
+
+  const heroSlideIndex = heroPhase === 'home' ? 0 : heroCarouselIndex + 1
+
+  const goToHeroSlide = useCallback((index) => {
+    if (index < 0 || index >= HERO_SLIDE_COUNT) return
+    if (index === heroSlideIndex && !heroTransitioning) return
+    clearHeroSecondVideoTimer()
+    const nextPhase = index === 0 ? 'home' : 'carousel'
+    const nextIndex = index === 0 ? 0 : index - 1
+    const nextSrc = getHeroSource(nextPhase, nextIndex)
+    const nextSlot = 1 - heroActiveSlot
+    heroPendingTransitionRef.current = { nextPhase, nextIndex, nextSlot }
+    setHeroNextSource(nextSrc)
+  }, [heroSlideIndex, heroActiveSlot, heroTransitioning, getHeroSource, clearHeroSecondVideoTimer])
+
   const handleHeroVideoEnded = useCallback(() => {
     clearHeroSecondVideoTimer()
     const { nextPhase, nextIndex } = getHeroNextPhaseAndIndex(heroPhase, heroCarouselIndex)
@@ -870,6 +886,32 @@ function App() {
                 </div>
               )}
             </motion.div>
+            <div
+              className="hero-dots"
+              role="tablist"
+              aria-label="Hero video slides"
+            >
+              {[0, 1, 2].map((i) => (
+                <button
+                  key={i}
+                  type="button"
+                  role="tab"
+                  aria-selected={heroSlideIndex === i}
+                  aria-label={`View slide ${i + 1} of 3`}
+                  className={`hero-dot ${heroSlideIndex === i ? 'active' : ''}`}
+                  onClick={() => goToHeroSlide(i)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowLeft') {
+                      e.preventDefault()
+                      goToHeroSlide((i - 1 + HERO_SLIDE_COUNT) % HERO_SLIDE_COUNT)
+                    } else if (e.key === 'ArrowRight') {
+                      e.preventDefault()
+                      goToHeroSlide((i + 1) % HERO_SLIDE_COUNT)
+                    }
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </section>
 
