@@ -1587,41 +1587,12 @@ function App() {
                 <div className="card-content">
                   <h3>Event-day tools</h3>
                   <p className="coordination-push">
-                    <strong>Once you both have tickets</strong>—chat, calls, location & safety unlock in one place.
+                    Chat, location, and safety tools unlock when you&apos;re both going—all in one place.
                   </p>
-                  <div className="visual-timeline coordination-timeline" aria-label="How tools unlock">
-                    <div className="timeline-item">
-                      <span className="timeline-icon" aria-hidden="true"><Icon name="message" className="timeline-icon-svg" /></span>
-                      <span>Chat</span>
-                    </div>
-                    <div className="timeline-arrow" aria-hidden="true">→</div>
-                    <div className="timeline-item">
-                      <span className="timeline-icon" aria-hidden="true"><Icon name="ticket" className="timeline-icon-svg" /></span>
-                      <span>Buy Tickets</span>
-                    </div>
-                    <div className="timeline-arrow" aria-hidden="true">→</div>
-                    <div className="timeline-item">
-                      <span className="timeline-icon" aria-hidden="true"><Icon name="calendar" className="timeline-icon-svg" /></span>
-                      <span>Event Day</span>
-                    </div>
-                    <div className="timeline-arrow" aria-hidden="true">→</div>
-                    <div className="timeline-item">
-                      <span className="timeline-icon" aria-hidden="true"><Icon name="unlock" className="timeline-icon-svg" /></span>
-                      <span>Unlock</span>
-                    </div>
-                  </div>
                   <div className="coordination-tools-grid">
                     <div className="coordination-tool-item">
-                      <span className="tool-icon" aria-hidden="true"><Icon name="phone" className="tool-icon-svg" /></span>
-                      <span className="tool-name">Calls</span>
-                    </div>
-                    <div className="coordination-tool-item">
-                      <span className="tool-icon" aria-hidden="true"><Icon name="video" className="tool-icon-svg" /></span>
-                      <span className="tool-name">Video</span>
-                    </div>
-                    <div className="coordination-tool-item">
-                      <span className="tool-icon" aria-hidden="true"><Icon name="camera" className="tool-icon-svg" /></span>
-                      <span className="tool-name">Photos</span>
+                      <span className="tool-icon" aria-hidden="true"><Icon name="message" className="tool-icon-svg" /></span>
+                      <span className="tool-name">Chat</span>
                     </div>
                     <div className="coordination-tool-item">
                       <span className="tool-icon" aria-hidden="true"><Icon name="mapPin" className="tool-icon-svg" /></span>
@@ -1632,9 +1603,6 @@ function App() {
                       <span className="tool-name">Safety</span>
                     </div>
                   </div>
-                  <p className="coordination-note">
-                    Emergency contacts, safe meet-up spots, and real-time check-ins—no more &ldquo;where are you?&rdquo; texts.
-                  </p>
                 </div>
               </motion.article>
             </CoverFlowCarousel>

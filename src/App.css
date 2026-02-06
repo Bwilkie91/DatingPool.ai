@@ -2873,6 +2873,7 @@ table {
 }
 
 .differentiators .cover-flow-card .coordination-tools-grid {
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.35rem;
   padding: 0.4rem;
   margin: 0.25rem 0;
