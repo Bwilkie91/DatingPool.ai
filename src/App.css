@@ -614,9 +614,18 @@ table {
   font-weight: 700;
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
-  color: var(--color-text-primary);
+  color: royalblue;
+  font-style: italic;
 }
 
+
+.hero-text-all .hero-title,
+.hero-text-all .hero-subtitle,
+.hero-text-all .hero-slogan {
+  filter: none;
+  opacity: 1;
+  visibility: visible;
+}
 
 .hero-text-all .hero-title {
   margin-bottom: clamp(var(--space-4), 3vh, var(--space-6));
@@ -637,14 +646,16 @@ table {
   margin-bottom: clamp(var(--space-4), 3vh, var(--space-6));
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
-  color: var(--color-text-primary);
+  color: royalblue;
+  font-style: italic;
 }
 
 .hero-subtitle {
   font-size: clamp(0.9375rem, 2vw + 0.75rem, 1.125rem);
   margin-bottom: clamp(var(--space-4), 2vh, var(--space-6));
   line-height: var(--line-height-relaxed);
-  color: var(--color-text-secondary);
+  color: royalblue;
+  font-style: italic;
   max-width: min(36em, 100%);
   margin-left: auto;
   margin-right: auto;
@@ -652,8 +663,9 @@ table {
 }
 
 .hero-subtitle strong {
-  color: var(--color-text-primary);
+  color: royalblue;
   font-weight: 600;
+  font-style: italic;
 }
 
 .hero-subtitle-secondary {
@@ -695,12 +707,12 @@ table {
   margin-top: clamp(var(--space-4), 2vh, var(--space-6));
   margin-bottom: 0;
   line-height: var(--line-height-relaxed);
-  color: #fff;
+  color: royalblue;
+  font-style: italic;
   max-width: min(36em, 100%);
   margin-left: auto;
   margin-right: auto;
   font-weight: 600;
-  font-style: italic;
 }
 
 .event-type-wrapper {

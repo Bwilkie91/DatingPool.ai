@@ -797,27 +797,27 @@ function App() {
                   </motion.p>
                 </div>
               ) : (
-                <div className="hero-text-all">
+                <div className="hero-text-all" key="hero-all-text">
                   <motion.h1
                     className="hero-title"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, filter: 'blur(0px)' }}
+                    animate={{ opacity: 1, filter: 'blur(0px)' }}
                     transition={{ duration: heroRevealTransition.duration, ease: heroRevealTransition.ease }}
                   >
                     Find an Event You Love. Find Someone to Share It With.
                   </motion.h1>
                   <motion.p
                     className="hero-subtitle"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, filter: 'blur(0px)' }}
+                    animate={{ opacity: 1, filter: 'blur(0px)' }}
                     transition={{ duration: heroRevealTransition.duration, delay: heroRevealTransition.stagger, ease: heroRevealTransition.ease }}
                   >
                     <strong>We're flipping the script. Find something you want to do, then find someone you want to do it with. No more "where should we meet?"—the plan is built in.</strong>
                   </motion.p>
                   <motion.p
                     className="hero-slogan"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, filter: 'blur(0px)' }}
+                    animate={{ opacity: 1, filter: 'blur(0px)' }}
                     transition={{ duration: heroRevealTransition.duration, delay: heroRevealTransition.stagger * 2, ease: heroRevealTransition.ease }}
                   >
                     A dating app that actually works? Now that's the real event!
