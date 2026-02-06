@@ -777,14 +777,15 @@ table {
   font-weight: 600;
 }
 
-/* Hero video dots: track and switch slides */
+/* Hero video dots: at bottom of video */
 .hero-dots {
+  position: absolute;
+  bottom: max(clamp(var(--space-4), 4vh, var(--space-8)), var(--safe-bottom));
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: center;
   gap: var(--space-2);
-  margin-top: clamp(var(--space-6), 5vh, var(--space-10));
-  padding-bottom: var(--space-2);
-  position: relative;
   z-index: 1;
 }
 

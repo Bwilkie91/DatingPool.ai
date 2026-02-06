@@ -886,32 +886,32 @@ function App() {
                 </div>
               )}
             </motion.div>
-            <div
-              className="hero-dots"
-              role="tablist"
-              aria-label="Hero video slides"
-            >
-              {[0, 1, 2].map((i) => (
-                <button
-                  key={i}
-                  type="button"
-                  role="tab"
-                  aria-selected={heroSlideIndex === i}
-                  aria-label={`View slide ${i + 1} of 3`}
-                  className={`hero-dot ${heroSlideIndex === i ? 'active' : ''}`}
-                  onClick={() => goToHeroSlide(i)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'ArrowLeft') {
-                      e.preventDefault()
-                      goToHeroSlide((i - 1 + HERO_SLIDE_COUNT) % HERO_SLIDE_COUNT)
-                    } else if (e.key === 'ArrowRight') {
-                      e.preventDefault()
-                      goToHeroSlide((i + 1) % HERO_SLIDE_COUNT)
-                    }
-                  }}
-                />
-              ))}
-            </div>
+          </div>
+          <div
+            className="hero-dots"
+            role="tablist"
+            aria-label="Hero video slides"
+          >
+            {[0, 1, 2].map((i) => (
+              <button
+                key={i}
+                type="button"
+                role="tab"
+                aria-selected={heroSlideIndex === i}
+                aria-label={`View slide ${i + 1} of 3`}
+                className={`hero-dot ${heroSlideIndex === i ? 'active' : ''}`}
+                onClick={() => goToHeroSlide(i)}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowLeft') {
+                    e.preventDefault()
+                    goToHeroSlide((i - 1 + HERO_SLIDE_COUNT) % HERO_SLIDE_COUNT)
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault()
+                    goToHeroSlide((i + 1) % HERO_SLIDE_COUNT)
+                  }
+                }}
+              />
+            ))}
           </div>
         </section>
 
