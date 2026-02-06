@@ -108,6 +108,7 @@ body {
   overflow-x: hidden;
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
+  overscroll-behavior-y: none;
 }
 
 /* Prevent overflow on all elements */
@@ -1619,8 +1620,27 @@ table {
   z-index: 1;
 }
 
+.journey-title {
+  margin-bottom: 0.5rem;
+}
+
+.journey-intro {
+  margin-bottom: 0.5rem;
+  max-width: 36em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.journey-carousel-intro {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
 .journey .cover-flow {
-  margin-top: clamp(2rem, 5vw, 3rem);
+  margin-top: clamp(1.5rem, 4vw, 2.5rem);
   margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
 }
 
@@ -1663,9 +1683,10 @@ table {
 }
 
 .cover-flow-card .journey-card .card-content h3 {
-  font-size: clamp(0.875rem, 1.6vw, 1rem);
+  font-size: clamp(0.9375rem, 1.75vw, 1.0625rem);
   line-height: 1.3;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .cover-flow-card .journey-card .card-content p {

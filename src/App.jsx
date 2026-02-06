@@ -89,6 +89,12 @@ function App() {
     triggerOnce: true
   })
 
+  const { ref: journeyInViewRef, inView: journeyInView } = useInView({
+    threshold: 0.05,
+    triggerOnce: true,
+    rootMargin: '80px'
+  })
+
   useEffect(() => {
     if (featuresInView && !featuresVideoReady) setFeaturesVideoReady(true)
   }, [featuresInView, featuresVideoReady])
@@ -848,26 +854,27 @@ function App() {
           </div>
         </section>
 
-        <section id="journey" className="journey" aria-label="How it works" ref={journeySectionRef}>
+        <section id="journey" className="journey" aria-label="How it works" ref={(el) => { journeySectionRef.current = el; journeyInViewRef(el); }}>
           <div className="journey-video-wrap" aria-hidden="true">
             <video
               className="journey-video"
-              src={poolVideoSrc}
+              src={journeyInView ? poolVideoSrc : undefined}
               autoPlay
               loop
               muted
               playsInline
-              preload="auto"
+              preload="none"
             />
             <div className="journey-video-overlay" />
           </div>
           <div className="container journey-content">
-            <h2 className="section-title animate-on-scroll">
-              How It Works
+            <h2 className="journey-title section-title animate-on-scroll">
+              How it works
             </h2>
-            <p className="section-intro animate-on-scroll">
-              No more swiping into the void. We've built a platform where every match has a built-in plan. Here's how it works:
+            <p className="journey-intro section-intro animate-on-scroll">
+              Four steps from "nothing to do" to a real date at a real place.
             </p>
+            <p className="journey-carousel-intro animate-on-scroll">Swipe to see each step.</p>
             <CoverFlowCarousel
               activeIndex={journeyCardIndex}
               setActiveIndex={setJourneyCardIndex}
@@ -882,13 +889,11 @@ function App() {
                   <div className="stat-badge stat-badge-blue">Step 1</div>
                 </div>
                 <div className="card-content">
-                  <h3>AI-Powered Discovery</h3>
-                  <p>
-                    Tell us what you're into. We'll surface events you'll actually want to go to—and optionally grab tickets before the FOMO hits.
-                  </p>
+                  <h3>Discover events you'll love</h3>
+                  <p>Tell us what you're into. We surface events you actually want to go to—and you can grab tickets if you want.</p>
                   <div className="step-you-get">
-                    <strong>You Get:</strong>
-                    <span>A feed that gets smarter the more you use it. No more "there's nothing to do."</span>
+                    <strong>You get:</strong>
+                    <span>A smarter feed. No more "there's nothing to do."</span>
                   </div>
                 </div>
               </motion.article>
@@ -900,13 +905,11 @@ function App() {
                   <div className="stat-badge stat-badge-blue">Step 2</div>
                 </div>
                 <div className="card-content">
-                  <h3>Join the Pool</h3>
-                  <p>
-                    See an event you like? Join the pool. No ticket required—just the intent to show up. Everyone in the pool is actually going.
-                  </p>
+                  <h3>Join the pool</h3>
+                  <p>Like an event? Join the pool. No ticket required—just the intent to show up. Everyone in the pool is going.</p>
                   <div className="step-you-get">
-                    <strong>You Get:</strong>
-                    <span>People who said "I'm in" instead of "maybe." Way better odds.</span>
+                    <strong>You get:</strong>
+                    <span>People who said "I'm in," not "maybe." Better odds.</span>
                   </div>
                 </div>
               </motion.article>
@@ -918,13 +921,11 @@ function App() {
                   <div className="stat-badge stat-badge-blue">Step 3</div>
                 </div>
                 <div className="card-content">
-                  <h3>AI Matching</h3>
-                  <p>
-                    We match you with people in your pool who fit—so you're not just swiping into the void. Real compatibility, same event.
-                  </p>
+                  <h3>Get matched</h3>
+                  <p>We match you with people in your pool who fit. Real compatibility, same event—no endless swiping.</p>
                   <div className="step-you-get">
-                    <strong>You Get:</strong>
-                    <span>Dates who are already going where you're going. The icebreaker writes itself.</span>
+                    <strong>You get:</strong>
+                    <span>Dates who are already going. The icebreaker writes itself.</span>
                   </div>
                 </div>
               </motion.article>
@@ -936,13 +937,11 @@ function App() {
                   <div className="stat-badge stat-badge-blue">Step 4</div>
                 </div>
                 <div className="card-content">
-                  <h3>Organized Conversations</h3>
-                  <p>
-                    Chats live under the event. No "what should we do?"—you're already going to the same thing. Just pick a spot and show up.
-                  </p>
+                  <h3>Chat, then meet</h3>
+                  <p>Conversations live under the event. You're already going to the same thing—just pick a spot and show up.</p>
                   <div className="step-you-get">
-                    <strong>You Get:</strong>
-                    <span>Conversations that turn into real meetups. Imagine that.</span>
+                    <strong>You get:</strong>
+                    <span>Conversations that become real meetups.</span>
                   </div>
                 </div>
               </motion.article>
