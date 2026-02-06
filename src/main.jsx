@@ -4,6 +4,9 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import App from './App'
 import PartnerSignIn from './PartnerSignIn'
+import Contact from './Contact'
+import PrivacyPolicy from './PrivacyPolicy'
+import TermsOfService from './TermsOfService'
 import ErrorBoundary from './ErrorBoundary'
 import './index.css'
 
@@ -16,6 +19,9 @@ function AnimatedRoutes() {
         <Route path="/" element={<App />} />
         <Route path="/partner" element={<PartnerSignIn />} />
         <Route path="/partner/signin" element={<PartnerSignIn />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
       </Routes>
     </AnimatePresence>
   )

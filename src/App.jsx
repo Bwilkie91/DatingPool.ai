@@ -1,6 +1,20 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
-import { motion, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence } from 'framer-motion'
+import { Link } from 'react-router-dom'
+import { useInView } from 'react-intersection-observer'
+import { motion, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { CoverFlowCarousel } from './CoverFlowCarousel'
+import { Icon } from './Icons'
 import './App.css'
+
+const poolVideoSrc = new URL('../pool.mp4', import.meta.url).href
+const pool2VideoSrc = new URL('../pool2.mp4', import.meta.url).href
+const pool3VideoSrc = new URL('../pool3.mp4', import.meta.url).href
+const pool4VideoSrc = new URL('../pool4.mp4', import.meta.url).href
+const pool5VideoSrc = new URL('../pool5.mp4', import.meta.url).href
+const homeVideoSrc = new URL('../home.mp4', import.meta.url).href
+
+const HERO_CAROUSEL_SOURCES = [pool5VideoSrc, pool3VideoSrc]
+const HERO_SECOND_VIDEO_MAX_MS = 13000
 
 /**
  * Main App Component
@@ -36,7 +50,29 @@ function App() {
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [openFolder, setOpenFolder] = useState(null)
   const [currentEventIndex, setCurrentEventIndex] = useState(0)
-  
+  const [featureCardIndex, setFeatureCardIndex] = useState(0)
+  const [featuresVideoReady, setFeaturesVideoReady] = useState(false)
+  const [heroPhase, setHeroPhase] = useState('home')
+  const [heroCarouselIndex, setHeroCarouselIndex] = useState(0)
+  const [heroActiveSlot, setHeroActiveSlot] = useState(0)
+  const [heroTransitioning, setHeroTransitioning] = useState(false)
+  const [heroNextSource, setHeroNextSource] = useState(null)
+  const [heroTextPinned, setHeroTextPinned] = useState(false)
+  const heroVideoRef0 = useRef(null)
+  const heroVideoRef1 = useRef(null)
+  const heroSecondVideoTimerRef = useRef(null)
+
+  const prefersReducedMotion = useReducedMotion()
+
+  const { ref: featuresSectionRef, inView: featuresInView } = useInView({
+    threshold: 0.1,
+    triggerOnce: true
+  })
+
+  useEffect(() => {
+    if (featuresInView && !featuresVideoReady) setFeaturesVideoReady(true)
+  }, [featuresInView, featuresVideoReady])
+
   // Event types for animated rotation - Real upcoming Chicago area events
   const eventTypes = [
     'the 312 Comedy Festival',
@@ -82,6 +118,7 @@ function App() {
   
   // Refs for DOM elements
   const heroRef = useRef(null)
+  const heroPendingTransitionRef = useRef(null)
   const featureCardsRef = useRef([])
   const journeyStepsRef = useRef([])
   const differentiatorsRef = useRef([])
@@ -89,6 +126,80 @@ function App() {
   const mobileMenuRef = useRef(null)
   const mobileMenuToggleRef = useRef(null)
   const waitlistFormRef = useRef(null)
+
+  // Hero transition: single source of truth (Material deceleration, ~600ms for video crossfade)
+  const HERO_TRANSITION_DURATION_MS = 600
+  const HERO_EASE = [0, 0, 0.2, 1] // Material Design deceleration (ease-out)
+  const HERO_REVEAL_DURATION = 0.45
+  const HERO_REVEAL_STAGGER = 0.08
+
+  const getHeroNextPhaseAndIndex = useCallback((phase, index) => {
+    if (phase === 'home') return { nextPhase: 'carousel', nextIndex: 0 }
+    if (index < HERO_CAROUSEL_SOURCES.length - 1) return { nextPhase: 'carousel', nextIndex: index + 1 }
+    return { nextPhase: 'home', nextIndex: 0 }
+  }, [])
+
+  const getHeroSource = useCallback((phase, index) => {
+    return phase === 'home' ? homeVideoSrc : HERO_CAROUSEL_SOURCES[index]
+  }, [])
+
+  const clearHeroSecondVideoTimer = useCallback(() => {
+    if (heroSecondVideoTimerRef.current) {
+      clearTimeout(heroSecondVideoTimerRef.current)
+      heroSecondVideoTimerRef.current = null
+    }
+  }, [])
+
+  const handleHeroVideoEnded = useCallback(() => {
+    clearHeroSecondVideoTimer()
+    const { nextPhase, nextIndex } = getHeroNextPhaseAndIndex(heroPhase, heroCarouselIndex)
+    const nextSrc = getHeroSource(nextPhase, nextIndex)
+    const nextSlot = 1 - heroActiveSlot
+    heroPendingTransitionRef.current = { nextPhase, nextIndex, nextSlot }
+    setHeroNextSource(nextSrc)
+  }, [heroPhase, heroCarouselIndex, heroActiveSlot, getHeroNextPhaseAndIndex, getHeroSource, clearHeroSecondVideoTimer])
+
+  const handleHeroVideoCanPlay = useCallback((slot) => {
+    const pending = heroPendingTransitionRef.current
+    if (!pending || pending.nextSlot !== slot) return
+    const el = slot === 0 ? heroVideoRef0.current : heroVideoRef1.current
+    if (el) {
+      el.play().catch(() => {})
+      setHeroTransitioning(true)
+      const durationMs = prefersReducedMotion ? 150 : HERO_TRANSITION_DURATION_MS
+      setTimeout(() => {
+        clearHeroSecondVideoTimer()
+        setHeroPhase(pending.nextPhase)
+        setHeroCarouselIndex(pending.nextIndex)
+        setHeroActiveSlot(pending.nextSlot)
+        setHeroNextSource(null)
+        setHeroTransitioning(false)
+        heroPendingTransitionRef.current = null
+        if (pending.nextPhase === 'home') {
+          setHeroTextPinned(true)
+        }
+        if (pending.nextPhase === 'carousel' && pending.nextIndex === 1) {
+          heroSecondVideoTimerRef.current = setTimeout(() => {
+            heroSecondVideoTimerRef.current = null
+            handleHeroVideoEnded()
+          }, HERO_SECOND_VIDEO_MAX_MS)
+        }
+      }, durationMs)
+    }
+  }, [handleHeroVideoEnded, prefersReducedMotion, clearHeroSecondVideoTimer])
+
+  const heroLineTransition = useMemo(() => ({
+    duration: prefersReducedMotion ? 0.2 : HERO_TRANSITION_DURATION_MS / 1000,
+    ease: HERO_EASE
+  }), [prefersReducedMotion])
+
+  const heroRevealTransition = useMemo(() => ({
+    duration: prefersReducedMotion ? 0.2 : HERO_REVEAL_DURATION,
+    ease: HERO_EASE,
+    stagger: prefersReducedMotion ? 0 : HERO_REVEAL_STAGGER
+  }), [prefersReducedMotion])
+
+  useEffect(() => () => clearHeroSecondVideoTimer(), [clearHeroSecondVideoTimer])
 
   // Smooth scroll handler with throttling
   const handleScroll = useCallback(() => {
@@ -132,6 +243,10 @@ function App() {
     setIsMobileMenuOpen(false) // Close mobile menu on navigation
     document.body.style.overflow = ''
     document.body.classList.remove('menu-open')
+    // Return focus to toggle so aria-hidden on nav doesn't hide focused element
+    if (mobileMenuToggleRef.current) {
+      mobileMenuToggleRef.current.focus()
+    }
     const element = document.getElementById(sectionId)
     if (element) {
       element.scrollIntoView({ 
@@ -241,6 +356,9 @@ function App() {
           setIsMobileMenuOpen(false)
           document.body.style.overflow = ''
           document.body.classList.remove('menu-open')
+          if (mobileMenuToggleRef.current) {
+            mobileMenuToggleRef.current.focus()
+          }
         }
       } catch (error) {
         console.warn('Error handling click outside:', error)
@@ -252,6 +370,9 @@ function App() {
         if (e.key === 'Escape' && isMobileMenuOpen) {
           setIsMobileMenuOpen(false)
           document.body.style.overflow = ''
+          if (mobileMenuToggleRef.current) {
+            mobileMenuToggleRef.current.focus()
+          }
           document.body.classList.remove('menu-open')
         }
       } catch (error) {
@@ -371,16 +492,10 @@ function App() {
       }
     }
     
-    // Update differentiators refs array size
-    if (differentiatorsRef.current.length < 10) {
-      differentiatorsRef.current = [...differentiatorsRef.current, ...Array(10 - differentiatorsRef.current.length).fill(null)]
-    }
-
-    // Observe refs
+    // Observe refs (feature cards are in Cover Flow carousel, not observed)
     const allRefs = [
       ...featureCardsRef.current,
       ...journeyStepsRef.current,
-      ...differentiatorsRef.current,
     ].filter(Boolean)
 
     if (observer) {
@@ -460,37 +575,54 @@ function App() {
     [isScrolled]
   )
 
-  if (isLoading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-spinner"></div>
-        <p>Loading DatingPool...</p>
-      </div>
-    )
-  }
-
-  // Framer Motion page transition variants
+  // Framer Motion: app shell and loading overlay (exit animation when done)
   const pageVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 }
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 }
   }
 
-  const pageTransition = {
-    type: 'tween',
-    ease: 'anticipate',
-    duration: 0.4
+  const pageTransition = { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }
+
+  const heroVariants = {
+    initial: {},
+    animate: {
+      transition: {
+        staggerChildren: prefersReducedMotion ? 0 : 0.08,
+        delayChildren: prefersReducedMotion ? 0 : 0.15
+      }
+    }
+  }
+
+  const heroItemVariants = {
+    initial: prefersReducedMotion ? false : { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 }
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="App"
       initial="initial"
       animate="animate"
-      exit="exit"
       variants={pageVariants}
       transition={pageTransition}
     >
+      <AnimatePresence mode="wait">
+        {isLoading && (
+          <motion.div
+            className="loading-screen"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: prefersReducedMotion ? 0.1 : 0.28, ease: 'easeInOut' }}
+            aria-live="polite"
+            aria-busy="true"
+          >
+            <div className="loading-spinner" aria-hidden="true" />
+            <p>Loading DatingPool...</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <header className={headerClass}>
         <div className="container">
           <div className="logo" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
@@ -547,9 +679,18 @@ function App() {
             >
               Features
             </a>
+            <Link to="/contact" className="nav-link" onClick={() => setIsMobileMenuOpen(false)} aria-label="Contact">
+              Contact
+            </Link>
+            <Link to="/privacy-policy" className="nav-link" onClick={() => setIsMobileMenuOpen(false)} aria-label="Privacy Policy">
+              Privacy Policy
+            </Link>
+            <Link to="/terms-of-service" className="nav-link" onClick={() => setIsMobileMenuOpen(false)} aria-label="Terms of Service">
+              Terms of Service
+            </Link>
             <a 
               href="#coming-soon" 
-              className={`nav-link nav-link-cta glow-primary ${activeSection === 'coming-soon' ? 'active' : ''}`}
+              className={`nav-link nav-link-cta ${activeSection === 'coming-soon' ? 'active' : ''}`}
               onClick={(e) => scrollToSection(e, 'coming-soon')}
               aria-label="Join waitlist"
             >
@@ -564,34 +705,143 @@ function App() {
         <div className="scroll-progress-bar" style={{ width: `${scrollProgress}%` }}></div>
         
         <section className="hero" ref={heroRef} aria-label="Hero section">
-          <div className="hero-background" style={parallaxStyle} aria-hidden="true"></div>
+          <div className="hero-video-wrap" aria-hidden="true">
+            {[0, 1].map((slot) => {
+              const isVisible = (slot === heroActiveSlot && !heroTransitioning) || (slot !== heroActiveSlot && heroTransitioning)
+              const src = slot === heroActiveSlot ? getHeroSource(heroPhase, heroCarouselIndex) : heroNextSource
+              return (
+                <div
+                  key={slot}
+                  className={`hero-video-layer ${isVisible ? 'hero-video-layer-visible' : 'hero-video-layer-hidden'}`}
+                  aria-hidden={!isVisible}
+                >
+                  <video
+                    ref={slot === 0 ? heroVideoRef0 : heroVideoRef1}
+                    className="hero-video"
+                    src={src || undefined}
+                    autoPlay={slot === heroActiveSlot}
+                    loop={false}
+                    muted
+                    playsInline
+                    preload="auto"
+                    onEnded={slot === heroActiveSlot ? handleHeroVideoEnded : undefined}
+                    onCanPlayThrough={() => handleHeroVideoCanPlay(slot)}
+                  />
+                </div>
+              )
+            })}
+            <div className="hero-video-overlay" />
+          </div>
+          <div className="hero-background" style={parallaxStyle} aria-hidden="true" />
           <div className="particles-container" aria-hidden="true">
             {particles.map((particle, i) => (
-              <div key={i} className="particle" style={{
-                left: `${particle.x}%`,
-                top: `${particle.y}%`,
-                animationDelay: `${particle.delay}s`,
-                animationDuration: `${particle.duration}s`
-              }}></div>
+              <div
+                key={i}
+                className="particle"
+                style={{
+                  left: `${particle.x}%`,
+                  top: `${particle.y}%`,
+                  animationDelay: `${particle.delay}s`,
+                  animationDuration: `${particle.duration}s`
+                }}
+              />
             ))}
           </div>
           <div className="container">
-            <div className="hero-content">
-              <h1 className="hero-title animate-fade-in shimmer-text">
-                Find an Event You Love. Find Someone to Share It With.
-              </h1>
-              <p className="hero-subtitle animate-fade-in-delay">
-                <strong>We're flipping the script. Find something you want to do, then find someone to go with. No more "where should we meet?"—the plan is built in.</strong>
-              </p>
-              <p className="hero-slogan animate-fade-in-delay">
-                A dating app that actually works? Now that's the real event!
-              </p>
-            </div>
+            <motion.div
+              className="hero-content"
+              variants={heroVariants}
+              initial="initial"
+              animate="animate"
+            >
+              {!heroTextPinned ? (
+                <div className="hero-text-single" aria-live="polite">
+                  <motion.h1
+                    className="hero-title hero-line-slot"
+                    initial={false}
+                    animate={{
+                      opacity: heroPhase === 'home' ? 1 : 0,
+                      filter: heroPhase === 'home' || prefersReducedMotion ? 'blur(0px)' : 'blur(6px)',
+                      pointerEvents: heroPhase === 'home' ? 'auto' : 'none'
+                    }}
+                    transition={heroLineTransition}
+                    aria-hidden={heroPhase !== 'home'}
+                  >
+                    Find an Event You Love. Find Someone to Share It With.
+                  </motion.h1>
+                  <motion.p
+                    className="hero-subtitle hero-line-slot"
+                    initial={false}
+                    animate={{
+                      opacity: heroPhase === 'carousel' && heroCarouselIndex === 0 ? 1 : 0,
+                      filter: (heroPhase === 'carousel' && heroCarouselIndex === 0) || prefersReducedMotion ? 'blur(0px)' : 'blur(6px)',
+                      pointerEvents: heroPhase === 'carousel' && heroCarouselIndex === 0 ? 'auto' : 'none'
+                    }}
+                    transition={heroLineTransition}
+                    aria-hidden={!(heroPhase === 'carousel' && heroCarouselIndex === 0)}
+                  >
+                    <strong>We're flipping the script. Find something you want to do, then find someone you want to do it with. No more "where should we meet?"—the plan is built in.</strong>
+                  </motion.p>
+                  <motion.p
+                    className="hero-slogan hero-line-slot"
+                    initial={false}
+                    animate={{
+                      opacity: heroPhase === 'carousel' && heroCarouselIndex === 1 ? 1 : 0,
+                      filter: (heroPhase === 'carousel' && heroCarouselIndex === 1) || prefersReducedMotion ? 'blur(0px)' : 'blur(6px)',
+                      pointerEvents: heroPhase === 'carousel' && heroCarouselIndex === 1 ? 'auto' : 'none'
+                    }}
+                    transition={heroLineTransition}
+                    aria-hidden={!(heroPhase === 'carousel' && heroCarouselIndex === 1)}
+                  >
+                    A dating app that actually works? Now that's the real event!
+                  </motion.p>
+                </div>
+              ) : (
+                <div className="hero-text-all">
+                  <motion.h1
+                    className="hero-title"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: heroRevealTransition.duration, ease: heroRevealTransition.ease }}
+                  >
+                    Find an Event You Love. Find Someone to Share It With.
+                  </motion.h1>
+                  <motion.p
+                    className="hero-subtitle"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: heroRevealTransition.duration, delay: heroRevealTransition.stagger, ease: heroRevealTransition.ease }}
+                  >
+                    <strong>We're flipping the script. Find something you want to do, then find someone you want to do it with. No more "where should we meet?"—the plan is built in.</strong>
+                  </motion.p>
+                  <motion.p
+                    className="hero-slogan"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: heroRevealTransition.duration, delay: heroRevealTransition.stagger * 2, ease: heroRevealTransition.ease }}
+                  >
+                    A dating app that actually works? Now that's the real event!
+                  </motion.p>
+                </div>
+              )}
+            </motion.div>
           </div>
         </section>
 
         <section id="journey" className="journey" aria-label="How it works">
-          <div className="container">
+          <div className="journey-video-wrap" aria-hidden="true">
+            <video
+              className="journey-video"
+              src={poolVideoSrc}
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+            />
+            <div className="journey-video-overlay" />
+          </div>
+          <div className="container journey-content">
             <h2 className="section-title animate-on-scroll">
               How It Works
             </h2>
@@ -615,7 +865,7 @@ function App() {
                   <div className="step-visual">
                     <div className="step-number" aria-hidden="true">1</div>
                   </div>
-                  <div className="step-icon" aria-hidden="true">🤖</div>
+                  <div className="step-icon" aria-hidden="true"><Icon name="bot" className="step-icon-svg" /></div>
                 </div>
                 <div className="step-content">
                   <h3>AI-Powered Discovery</h3>
@@ -644,7 +894,7 @@ function App() {
                   <div className="step-visual">
                     <div className="step-number" aria-hidden="true">2</div>
                   </div>
-                  <div className="step-icon" aria-hidden="true">🏊</div>
+                  <div className="step-icon" aria-hidden="true"><Icon name="waves" className="step-icon-svg" /></div>
                 </div>
                 <div className="step-content">
                   <h3>Join the Pool</h3>
@@ -673,7 +923,7 @@ function App() {
                   <div className="step-visual">
                     <div className="step-number" aria-hidden="true">3</div>
                   </div>
-                  <div className="step-icon" aria-hidden="true">🎯</div>
+                  <div className="step-icon" aria-hidden="true"><Icon name="target" className="step-icon-svg" /></div>
                 </div>
                 <div className="step-content">
                   <h3>AI Matching</h3>
@@ -702,7 +952,7 @@ function App() {
                   <div className="step-visual">
                     <div className="step-number" aria-hidden="true">4</div>
                   </div>
-                  <div className="step-icon" aria-hidden="true">💬</div>
+                  <div className="step-icon" aria-hidden="true"><Icon name="message" className="step-icon-svg" /></div>
                 </div>
                 <div className="step-content">
                   <h3>Organized Conversations</h3>
@@ -720,6 +970,18 @@ function App() {
         </section>
 
         <section id="mission" className="mission" aria-label="Our Mission">
+          <div className="mission-video-wrap" aria-hidden="true">
+            <video
+              className="mission-video"
+              src={pool5VideoSrc}
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+            />
+            <div className="mission-video-overlay" />
+          </div>
           <div className="container">
             <div className="mission-content">
               <h2 className="section-title animate-on-scroll">
@@ -739,7 +1001,7 @@ function App() {
                     transition={{ duration: 0.5 }}
                   >
                     <div className="emoji-bubble-item">
-                      <span className="emoji-character">👫</span>
+                      <span className="emoji-character"><Icon name="usersTwo" className="icon-emoji" /></span>
                       <div className="speech-bubble tinder-bubble">
                         <span className="bubble-text">"We Met on Tinder!"</span>
                       </div>
@@ -764,7 +1026,7 @@ function App() {
                     transition={{ duration: 0.5, delay: 0.3 }}
                   >
                     <div className="emoji-bubble-item">
-                      <span className="emoji-character">👫</span>
+                      <span className="emoji-character"><Icon name="usersTwo" className="icon-emoji" /></span>
                       <div className="speech-bubble event-bubble">
                         <AnimatePresence mode="wait">
                           <motion.span
@@ -806,8 +1068,21 @@ function App() {
           </div>
         </section>
 
-        <section id="features" className="differentiators" aria-label="Features">
-          <div className="container">
+        <section id="features" className="differentiators" aria-label="Features" ref={featuresSectionRef}>
+          <div className={`differentiators-video-wrap ${!featuresVideoReady ? 'differentiators-video-placeholder' : ''}`} aria-hidden="true">
+            {featuresVideoReady && (
+              <video
+                className="differentiators-video"
+                src={pool2VideoSrc}
+                autoPlay
+                loop
+                muted
+                playsInline
+              />
+            )}
+            <div className="differentiators-video-overlay" />
+          </div>
+          <div className="container differentiators-content">
             <div className="features-header">
               <div className="section-badge animate-on-scroll">Why DatingPool Actually Works</div>
               <h2 className="section-title animate-on-scroll">
@@ -815,7 +1090,7 @@ function App() {
               </h2>
               <div className="problem-solution animate-on-scroll">
                 <div className="problem-box">
-                  <h3 className="problem-title">The Old Way ❌</h3>
+                  <h3 className="problem-title">The Old Way <Icon name="xCircle" className="icon-inline" /></h3>
                   <ul className="problem-list">
                     <li>Too many matches that go nowhere</li>
                     <li>Too many "where should we meet?" conversations that fizzle out</li>
@@ -823,9 +1098,9 @@ function App() {
                   </ul>
                 </div>
                 <div className="solution-box">
-                  <h3 className="solution-title">The DatingPool Way ✅</h3>
+                  <h3 className="solution-title">The DatingPool Way <Icon name="checkCircle" className="icon-inline" /></h3>
                   <p className="solution-lead">
-                    Find your vibe, then find your plus-one.
+                    Find someone to go with.
                   </p>
                   <p className="solution-description">
                     The best dates happen at events you want to attend. No ghosting when there's a concert to go to.
@@ -844,23 +1119,17 @@ function App() {
                 </p>
               </div>
             </div>
-            <div className="differentiators-grid" role="list">
+            <CoverFlowCarousel activeIndex={featureCardIndex} setActiveIndex={setFeatureCardIndex}>
               <motion.article 
-                className="differentiator-card feature-card-featured interactive-card animate-on-scroll" 
-                ref={(el) => (differentiatorsRef.current[0] = el)}
+                className="differentiator-card feature-card-featured interactive-card" 
                 role="listitem"
                 data-feature="planning"
-                initial={{ opacity: 0, y: 30, rotateX: 0 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                whileHover={{ scale: 1.02, y: -5, rotateX: 2, rotateY: 2 }}
-                whileTap={{ scale: 0.98 }}
-                style={{ transformStyle: 'preserve-3d' }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.99 }}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
-                    <div className="diff-icon" aria-hidden="true">✅</div>
+                    <div className="diff-icon" aria-hidden="true"><Icon name="checkCircle" className="diff-icon-svg" /></div>
                   </div>
                   <div className="stat-badge stat-badge-success">0 Planning Friction</div>
                 </div>
@@ -868,27 +1137,27 @@ function App() {
                   <h3>Solves "What Next?"</h3>
                   <div className="visual-timeline">
                     <div className="timeline-item">
-                      <span className="timeline-icon">🎪</span>
+                      <span className="timeline-icon"><Icon name="calendar" className="timeline-icon-svg" /></span>
                       <span>Find Event</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
-                      <span className="timeline-icon">🏊</span>
+                      <span className="timeline-icon"><Icon name="waves" className="timeline-icon-svg" /></span>
                       <span>Join Pool</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
-                      <span className="timeline-icon">📍</span>
+                      <span className="timeline-icon"><Icon name="mapPin" className="timeline-icon-svg" /></span>
                       <span>Venue</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
-                      <span className="timeline-icon">⏰</span>
+                      <span className="timeline-icon"><Icon name="clock" className="timeline-icon-svg" /></span>
                       <span>Time</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
-                      <span className="timeline-icon">👋</span>
+                      <span className="timeline-icon"><Icon name="hand" className="timeline-icon-svg" /></span>
                       <span>Meet</span>
                     </div>
                   </div>
@@ -900,21 +1169,15 @@ function App() {
                 </div>
               </motion.article>
               <motion.article 
-                className="differentiator-card interactive-card animate-on-scroll" 
-                ref={(el) => (differentiatorsRef.current[1] = el)}
+                className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="matching"
-                initial={{ opacity: 0, y: 30, rotateX: 0 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                whileHover={{ scale: 1.02, y: -5, rotateX: 2, rotateY: 2 }}
-                whileTap={{ scale: 0.98 }}
-                style={{ transformStyle: 'preserve-3d' }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.99 }}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
-                    <div className="diff-icon" aria-hidden="true">💬</div>
+                    <div className="diff-icon" aria-hidden="true"><Icon name="message" className="diff-icon-svg" /></div>
                   </div>
                   <div className="stat-badge stat-badge-blue">100% Built-in Icebreakers</div>
                 </div>
@@ -938,21 +1201,15 @@ function App() {
                 </div>
               </motion.article>
               <motion.article 
-                className="differentiator-card interactive-card animate-on-scroll" 
-                ref={(el) => (differentiatorsRef.current[2] = el)}
+                className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="intent"
-                initial={{ opacity: 0, y: 30, rotateX: 0 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                whileHover={{ scale: 1.02, y: -5, rotateX: 2, rotateY: 2 }}
-                whileTap={{ scale: 0.98 }}
-                style={{ transformStyle: 'preserve-3d' }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.99 }}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
-                    <div className="diff-icon" aria-hidden="true">🎯</div>
+                    <div className="diff-icon" aria-hidden="true"><Icon name="target" className="diff-icon-svg" /></div>
                   </div>
                   <div className="stat-badge stat-badge-orange">3x Higher Intent</div>
                 </div>
@@ -972,21 +1229,15 @@ function App() {
                 </div>
               </motion.article>
               <motion.article 
-                className="differentiator-card interactive-card animate-on-scroll" 
-                ref={(el) => (differentiatorsRef.current[3] = el)}
+                className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="organization"
-                initial={{ opacity: 0, y: 30, rotateX: 0 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                whileHover={{ scale: 1.02, y: -5, rotateX: 2, rotateY: 2 }}
-                whileTap={{ scale: 0.98 }}
-                style={{ transformStyle: 'preserve-3d' }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.99 }}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
-                    <div className="diff-icon" aria-hidden="true">📁</div>
+                    <div className="diff-icon" aria-hidden="true"><Icon name="folderOpen" className="diff-icon-svg" /></div>
                   </div>
                   <div className="stat-badge stat-badge-purple">Zero Inbox Chaos</div>
                 </div>
@@ -997,26 +1248,26 @@ function App() {
                       className={`folder-item ${openFolder === 'pizza-workshop' ? 'active' : ''}`}
                       onClick={() => setOpenFolder(openFolder === 'pizza-workshop' ? null : 'pizza-workshop')}
                     >
-                      <span className="folder-icon">📂</span>
+                      <span className="folder-icon"><Icon name="folder" className="folder-icon-svg" /></span>
                       <span>Pizza Making Workshop</span>
-                      <span className="folder-arrow">{openFolder === 'pizza-workshop' ? '▼' : '▶'}</span>
+                      <span className="folder-arrow">{openFolder === 'pizza-workshop' ? <Icon name="chevronDown" className="folder-arrow-svg" /> : <Icon name="chevronRight" className="folder-arrow-svg" />}</span>
                     </div>
                     {openFolder === 'pizza-workshop' && (
                       <div id="pizza-workshop-chats" className="chat-list" role="list">
                         <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true">👤</div>
+                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
                           <span className="chat-name">Sarah</span>
                         </div>
                         <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true">👤</div>
+                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
                           <span className="chat-name">Mike</span>
                         </div>
                         <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true">👤</div>
+                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
                           <span className="chat-name">Emma</span>
                         </div>
                         <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true">👤</div>
+                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
                           <span className="chat-name">Alex</span>
                         </div>
                       </div>
@@ -1035,22 +1286,22 @@ function App() {
                       aria-expanded={openFolder === 'running-club'}
                       aria-controls="running-club-chats"
                     >
-                      <span className="folder-icon">📂</span>
+                      <span className="folder-icon"><Icon name="folder" className="folder-icon-svg" /></span>
                       <span>3Run2 Running Club</span>
-                      <span className="folder-arrow">{openFolder === 'running-club' ? '▼' : '▶'}</span>
+                      <span className="folder-arrow">{openFolder === 'running-club' ? <Icon name="chevronDown" className="folder-arrow-svg" /> : <Icon name="chevronRight" className="folder-arrow-svg" />}</span>
                     </div>
                     {openFolder === 'running-club' && (
                       <div id="running-club-chats" className="chat-list" role="list">
                         <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true">👤</div>
+                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
                           <span className="chat-name">Jordan</span>
                         </div>
                         <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true">👤</div>
+                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
                           <span className="chat-name">Taylor</span>
                         </div>
                         <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true">👤</div>
+                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
                           <span className="chat-name">Casey</span>
                         </div>
                       </div>
@@ -1069,26 +1320,26 @@ function App() {
                       aria-expanded={openFolder === 'tbox-crawl'}
                       aria-controls="tbox-crawl-chats"
                     >
-                      <span className="folder-icon">📂</span>
+                      <span className="folder-icon"><Icon name="folder" className="folder-icon-svg" /></span>
                       <span>TBOX Christmas Bar Crawl</span>
-                      <span className="folder-arrow">{openFolder === 'tbox-crawl' ? '▼' : '▶'}</span>
+                      <span className="folder-arrow">{openFolder === 'tbox-crawl' ? <Icon name="chevronDown" className="folder-arrow-svg" /> : <Icon name="chevronRight" className="folder-arrow-svg" />}</span>
                     </div>
                     {openFolder === 'tbox-crawl' && (
                       <div id="tbox-crawl-chats" className="chat-list" role="list">
                         <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true">👤</div>
+                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
                           <span className="chat-name">Chris</span>
                         </div>
                         <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true">👤</div>
+                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
                           <span className="chat-name">Morgan</span>
                         </div>
                         <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true">👤</div>
+                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
                           <span className="chat-name">Riley</span>
                         </div>
                         <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true">👤</div>
+                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
                           <span className="chat-name">Sam</span>
                         </div>
                       </div>
@@ -1107,22 +1358,22 @@ function App() {
                       aria-expanded={openFolder === 'art-institute'}
                       aria-controls="art-institute-chats"
                     >
-                      <span className="folder-icon">📂</span>
+                      <span className="folder-icon"><Icon name="folder" className="folder-icon-svg" /></span>
                       <span>After Dark at the Art Institute</span>
-                      <span className="folder-arrow">{openFolder === 'art-institute' ? '▼' : '▶'}</span>
+                      <span className="folder-arrow">{openFolder === 'art-institute' ? <Icon name="chevronDown" className="folder-arrow-svg" /> : <Icon name="chevronRight" className="folder-arrow-svg" />}</span>
                     </div>
                     {openFolder === 'art-institute' && (
                       <div id="art-institute-chats" className="chat-list" role="list">
                         <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true">👤</div>
+                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
                           <span className="chat-name">Drew</span>
                         </div>
                         <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true">👤</div>
+                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
                           <span className="chat-name">Jamie</span>
                         </div>
                         <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true">👤</div>
+                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
                           <span className="chat-name">Pat</span>
                         </div>
                       </div>
@@ -1136,21 +1387,15 @@ function App() {
                 </div>
               </motion.article>
               <motion.article 
-                className="differentiator-card interactive-card animate-on-scroll" 
-                ref={(el) => (differentiatorsRef.current[4] = el)}
+                className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="verification"
-                initial={{ opacity: 0, y: 30, rotateX: 0 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                whileHover={{ scale: 1.02, y: -5, rotateX: 2, rotateY: 2 }}
-                whileTap={{ scale: 0.98 }}
-                style={{ transformStyle: 'preserve-3d' }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.99 }}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
-                    <div className="diff-icon" aria-hidden="true">🛡️</div>
+                    <div className="diff-icon" aria-hidden="true"><Icon name="shield" className="diff-icon-svg" /></div>
                   </div>
                   <div className="stat-badge stat-badge-green">100% Verified Profiles</div>
                 </div>
@@ -1158,15 +1403,15 @@ function App() {
                   <h3>Verified & Safe</h3>
                   <div className="verification-steps">
                     <div className="verification-step">
-                      <span className="step-check">✓</span>
+                      <span className="step-check"><Icon name="check" className="step-check-svg" /></span>
                       <span>Real-world validation</span>
                     </div>
                     <div className="verification-step">
-                      <span className="step-check">✓</span>
+                      <span className="step-check"><Icon name="check" className="step-check-svg" /></span>
                       <span>No fraud</span>
                     </div>
                     <div className="verification-step">
-                      <span className="step-check">✓</span>
+                      <span className="step-check"><Icon name="check" className="step-check-svg" /></span>
                       <span>Quality over quantity</span>
                     </div>
                   </div>
@@ -1177,21 +1422,15 @@ function App() {
                 </div>
               </motion.article>
               <motion.article 
-                className="differentiator-card interactive-card animate-on-scroll" 
-                ref={(el) => (differentiatorsRef.current[5] = el)}
+                className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="squading"
-                initial={{ opacity: 0, y: 30, rotateX: 0 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-                whileHover={{ scale: 1.02, y: -5, rotateX: 2, rotateY: 2 }}
-                whileTap={{ scale: 0.98 }}
-                style={{ transformStyle: 'preserve-3d' }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.99 }}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
-                    <div className="diff-icon" aria-hidden="true">👥</div>
+                    <div className="diff-icon" aria-hidden="true"><Icon name="users" className="diff-icon-svg" /></div>
                   </div>
                   <div className="stat-badge stat-badge-yellow">Group Discounts</div>
                 </div>
@@ -1199,17 +1438,17 @@ function App() {
                   <h3>Squading Up</h3>
                   <div className="group-flow">
                     <div className="flow-item">
-                      <span className="flow-icon">👤</span>
+                      <span className="flow-icon"><Icon name="user" className="flow-icon-svg" /></span>
                       <span>You + Friends</span>
                     </div>
                     <div className="flow-arrow">→</div>
                     <div className="flow-item">
-                      <span className="flow-icon">👥</span>
+                      <span className="flow-icon"><Icon name="users" className="flow-icon-svg" /></span>
                       <span>Match Groups</span>
                     </div>
                     <div className="flow-arrow">→</div>
                     <div className="flow-item">
-                      <span className="flow-icon">🎉</span>
+                      <span className="flow-icon"><Icon name="sparkles" className="flow-icon-svg" /></span>
                       <span>Event Together</span>
                     </div>
                   </div>
@@ -1220,21 +1459,15 @@ function App() {
                 </div>
               </motion.article>
               <motion.article 
-                className="differentiator-card interactive-card animate-on-scroll" 
-                ref={(el) => (differentiatorsRef.current[6] = el)}
+                className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="tickets"
-                initial={{ opacity: 0, y: 30, rotateX: 0 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-                whileHover={{ scale: 1.02, y: -5, rotateX: 2, rotateY: 2 }}
-                whileTap={{ scale: 0.98 }}
-                style={{ transformStyle: 'preserve-3d' }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.99 }}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
-                    <div className="diff-icon" aria-hidden="true">🎫</div>
+                    <div className="diff-icon" aria-hidden="true"><Icon name="ticket" className="diff-icon-svg" /></div>
                   </div>
                   <div className="stat-badge stat-badge-blue">Integrated Tickets</div>
                 </div>
@@ -1242,17 +1475,17 @@ function App() {
                   <h3>Find & Purchase Tickets</h3>
                   <div className="visual-timeline">
                     <div className="timeline-item">
-                      <span className="timeline-icon">🔍</span>
+                      <span className="timeline-icon"><Icon name="search" className="timeline-icon-svg" /></span>
                       <span>Discover</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
-                      <span className="timeline-icon">🏊</span>
+                      <span className="timeline-icon"><Icon name="waves" className="timeline-icon-svg" /></span>
                       <span>Join Pool</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
-                      <span className="timeline-icon">🎫</span>
+                      <span className="timeline-icon"><Icon name="ticket" className="timeline-icon-svg" /></span>
                       <span>Optional Tickets</span>
                     </div>
                   </div>
@@ -1263,21 +1496,15 @@ function App() {
                 </div>
               </motion.article>
               <motion.article 
-                className="differentiator-card interactive-card animate-on-scroll" 
-                ref={(el) => (differentiatorsRef.current[7] = el)}
+                className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="privacy"
-                initial={{ opacity: 0, y: 30, rotateX: 0 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: 0.8 }}
-                whileHover={{ scale: 1.02, y: -5, rotateX: 2, rotateY: 2 }}
-                whileTap={{ scale: 0.98 }}
-                style={{ transformStyle: 'preserve-3d' }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.99 }}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
-                    <div className="diff-icon" aria-hidden="true">🔒</div>
+                    <div className="diff-icon" aria-hidden="true"><Icon name="lock" className="diff-icon-svg" /></div>
                   </div>
                   <div className="stat-badge stat-badge-purple">Privacy Protected</div>
                 </div>
@@ -1286,12 +1513,12 @@ function App() {
                   <div className="visual-comparison">
                     <div className="comparison-bad">
                       <span className="comparison-label">You</span>
-                      <span className="comparison-text">⚠️ Blocked user in pool</span>
+                      <span className="comparison-text"><Icon name="alert" className="icon-inline" /> Blocked user in pool</span>
                     </div>
                     <div className="comparison-arrow-small">→</div>
                     <div className="comparison-good">
                       <span className="comparison-label">Them</span>
-                      <span className="comparison-text">👁️ Can't see you</span>
+                      <span className="comparison-text"><Icon name="eye" className="icon-inline" /> Can't see you</span>
                     </div>
                   </div>
                   <p>
@@ -1302,21 +1529,15 @@ function App() {
                 </div>
               </motion.article>
               <motion.article 
-                className="differentiator-card interactive-card animate-on-scroll" 
-                ref={(el) => (differentiatorsRef.current[8] = el)}
+                className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="waitlisting"
-                initial={{ opacity: 0, y: 30, rotateX: 0 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: 0.9 }}
-                whileHover={{ scale: 1.02, y: -5, rotateX: 2, rotateY: 2 }}
-                whileTap={{ scale: 0.98 }}
-                style={{ transformStyle: 'preserve-3d' }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.99 }}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
-                    <div className="diff-icon" aria-hidden="true">⚡</div>
+                    <div className="diff-icon" aria-hidden="true"><Icon name="zap" className="diff-icon-svg" /></div>
                   </div>
                   <div className="stat-badge stat-badge-orange">Smart Matching</div>
                 </div>
@@ -1324,12 +1545,12 @@ function App() {
                   <h3>Intelligent Waitlisting</h3>
                   <div className="visual-timeline">
                     <div className="timeline-item">
-                      <span className="timeline-icon">👤</span>
+                      <span className="timeline-icon"><Icon name="user" className="timeline-icon-svg" /></span>
                       <span>Join Waitlist</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
-                      <span className="timeline-icon">🔍</span>
+                      <span className="timeline-icon"><Icon name="search" className="timeline-icon-svg" /></span>
                       <span>AI Matches Criteria</span>
                     </div>
                     <div className="timeline-arrow">→</div>
@@ -1339,7 +1560,7 @@ function App() {
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
-                      <span className="timeline-icon">🏊</span>
+                      <span className="timeline-icon"><Icon name="waves" className="timeline-icon-svg" /></span>
                       <span>Pool Opens</span>
                     </div>
                   </div>
@@ -1351,21 +1572,15 @@ function App() {
                 </div>
               </motion.article>
               <motion.article 
-                className="differentiator-card interactive-card animate-on-scroll" 
-                ref={(el) => (differentiatorsRef.current[9] = el)}
+                className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="coordination"
-                initial={{ opacity: 0, y: 30, rotateX: 0 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: 1.0 }}
-                whileHover={{ scale: 1.02, y: -5, rotateX: 2, rotateY: 2 }}
-                whileTap={{ scale: 0.98 }}
-                style={{ transformStyle: 'preserve-3d' }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.99 }}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
-                    <div className="diff-icon" aria-hidden="true">📱</div>
+                    <div className="diff-icon" aria-hidden="true"><Icon name="smartphone" className="diff-icon-svg" /></div>
                   </div>
                   <div className="stat-badge stat-badge-blue">Event Day Tools</div>
                 </div>
@@ -1373,44 +1588,44 @@ function App() {
                   <h3>Coordination Tools</h3>
                   <div className="visual-timeline">
                     <div className="timeline-item">
-                      <span className="timeline-icon">💬</span>
+                      <span className="timeline-icon"><Icon name="message" className="timeline-icon-svg" /></span>
                       <span>Chat</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
-                      <span className="timeline-icon">🎫</span>
+                      <span className="timeline-icon"><Icon name="ticket" className="timeline-icon-svg" /></span>
                       <span>Both Buy Tickets</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
-                      <span className="timeline-icon">📅</span>
+                      <span className="timeline-icon"><Icon name="calendar" className="timeline-icon-svg" /></span>
                       <span>Event Day</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
-                      <span className="timeline-icon">🔓</span>
+                      <span className="timeline-icon"><Icon name="unlock" className="timeline-icon-svg" /></span>
                       <span>Tools Unlock</span>
                     </div>
                   </div>
                   <div className="coordination-tools-grid">
                     <div className="coordination-tool-item">
-                      <span className="tool-icon">📞</span>
+                      <span className="tool-icon"><Icon name="phone" className="tool-icon-svg" /></span>
                       <span className="tool-name">Calls</span>
                     </div>
                     <div className="coordination-tool-item">
-                      <span className="tool-icon">📹</span>
+                      <span className="tool-icon"><Icon name="video" className="tool-icon-svg" /></span>
                       <span className="tool-name">Video</span>
                     </div>
                     <div className="coordination-tool-item">
-                      <span className="tool-icon">📸</span>
+                      <span className="tool-icon"><Icon name="camera" className="tool-icon-svg" /></span>
                       <span className="tool-name">Photos</span>
                     </div>
                     <div className="coordination-tool-item">
-                      <span className="tool-icon">📍</span>
+                      <span className="tool-icon"><Icon name="mapPin" className="tool-icon-svg" /></span>
                       <span className="tool-name">Location Sharing</span>
                     </div>
                     <div className="coordination-tool-item">
-                      <span className="tool-icon">🛡️</span>
+                      <span className="tool-icon"><Icon name="shield" className="tool-icon-svg" /></span>
                       <span className="tool-name">Event Security</span>
                     </div>
                   </div>
@@ -1425,20 +1640,32 @@ function App() {
                   </p>
                 </div>
               </motion.article>
-            </div>
+            </CoverFlowCarousel>
           </div>
         </section>
 
 
         <section id="coming-soon" className="cta" aria-label="Join waitlist">
-          <div className="container">
+          <div className="cta-video-wrap" aria-hidden="true">
+            <video
+              className="cta-video"
+              src={pool3VideoSrc}
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+            />
+            <div className="cta-video-overlay" />
+          </div>
+          <div className="container cta-container">
             <div className="cta-content">
-              <h2 className="cta-title animate-on-scroll">Join the Waitlist</h2>
-              <p className="section-intro animate-on-scroll">
-                Get early access and exclusive perks when we launch.
+              <h2 className="cta-title animate-on-scroll">Get In the Pool First</h2>
+              <p className="cta-intro animate-on-scroll">
+                Be the first to know when we launch—early access and exclusive perks are waiting.
               </p>
               <p className="cta-subtitle animate-on-scroll">
-                We're launching our pilot program in Austin, Houston, and Chicago first. Limited spots available—join now for priority access.
+                We're piloting in Austin, Houston, and Chicago. Limited spots—join now for priority access when we go live.
               </p>
               <form 
                 ref={waitlistFormRef}
@@ -1450,7 +1677,7 @@ function App() {
                 <div className="waitlist-input-wrapper">
                   <motion.input
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder="Your email"
                     value={email}
                     onChange={handleEmailChange}
                     onBlur={() => validateEmail(email)}
@@ -1476,7 +1703,7 @@ function App() {
                 </div>
                 <motion.button
                   type="submit"
-                  className="waitlist-button glow-primary"
+                  className="waitlist-button"
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
@@ -1484,7 +1711,7 @@ function App() {
                   disabled={isSubmitting || !!emailError}
                   aria-busy={isSubmitting}
                 >
-                  <span>{isSubmitting ? 'Submitting...' : 'Join Waitlist'}</span>
+                  <span>{isSubmitting ? 'Submitting...' : 'Join the Waitlist'}</span>
                   {!isSubmitting && (
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                       <path d="M7 3L14 10L7 17" strokeLinecap="round" strokeLinejoin="round"/>
