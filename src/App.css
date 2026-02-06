@@ -97,21 +97,24 @@ body {
   color: var(--color-text-primary);
 }
 
-/* Prevent horizontal scroll; keep vertical scroll explicitly enabled for trackpad/wheel */
+/* Prevent horizontal scroll; stable scroll container for iOS and all devices */
 html {
   overflow-x: hidden;
-  overflow-y: scroll; /* scroll (not auto) so document is clearly the scroll container for trackpad */
+  overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
+  min-height: 100%;
 }
 
 body {
+  min-height: 100%;
   max-width: 100vw;
   overflow-x: hidden;
   overflow-y: scroll;
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
-  overscroll-behavior-y: auto; /* allow native overscroll; none can break trackpad on some browsers */
   -webkit-overflow-scrolling: touch;
+  /* Reduce rubber-band jerk on iOS while keeping scroll flow */
+  overscroll-behavior-y: contain;
 }
 
 /* Allow swipe-to-scroll on home and full page (touch devices) */
@@ -574,6 +577,7 @@ table {
   inset: 0;
   z-index: 0;
   overflow: hidden;
+  contain: layout;
 }
 
 /* Hero video crossfade: synced with JS HERO_TRANSITION_DURATION_MS, Material deceleration */
@@ -5322,6 +5326,13 @@ table {
   }
 }
 
+/* Reduce compositor layers on mobile (iPhone etc.) for smoother scroll */
+@media (max-width: 768px) {
+  .animate-on-scroll {
+    will-change: auto;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-on-scroll {
     opacity: 1;
@@ -5929,16 +5940,17 @@ table {
   }
 }
 
-/* Scroll Progress Bar */
+/* Scroll Progress Bar: scaleX for compositor-only (smooth on iOS) */
 .scroll-progress-bar {
   position: fixed;
   top: 0;
   left: 0;
+  width: 100%;
   height: 3px;
   background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
   z-index: 10000;
-  transition: width var(--duration-fast) var(--ease-in-out-smooth);
   transform-origin: left;
+  transition: transform 0.15s linear;
 }
 
 /* Particle System */

@@ -596,10 +596,11 @@ function App() {
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('mousemove', handleMouseMove, { passive: true })
 
-    // Initialize particle system
+    // Initialize particle system (fewer on mobile for smoother scroll)
     const initParticles = () => {
+      const count = typeof window !== 'undefined' && window.innerWidth <= 768 ? 10 : CONSTANTS.PARTICLE_COUNT
       const newParticles = []
-      for (let i = 0; i < CONSTANTS.PARTICLE_COUNT; i++) {
+      for (let i = 0; i < count; i++) {
         newParticles.push({
           x: Math.random() * 100,
           y: Math.random() * 100,
@@ -783,7 +784,7 @@ function App() {
 
       <main id="main-content" tabIndex={-1}>
         {/* Scroll Progress Indicator */}
-        <div className="scroll-progress-bar" style={{ width: `${scrollProgress}%` }}></div>
+        <div className="scroll-progress-bar" style={{ transform: `scaleX(${scrollProgress / 100})` }} aria-hidden="true" />
         
         <section className="hero" ref={heroRef} aria-label="Hero section">
           <div className="hero-video-wrap" aria-hidden="true">

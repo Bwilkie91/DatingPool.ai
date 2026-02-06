@@ -49,6 +49,23 @@ All transitions use design tokens (`--duration-fast`, `--ease-out-expo`, `--ease
 
 ---
 
+## iPhone / mobile responsiveness & scroll (Feb 2026)
+
+**Issue:** On iPhone 13 (and similar devices) the site was jerky and not flowing properly during scroll.
+
+**Research:** iOS Safari scroll jank is often caused by (1) animating non-compositor properties (e.g. `width`) during scroll, (2) too many compositor layers from `will-change`, (3) undefined or conflicting scroll container (html/body), (4) rubber-band overscroll fighting with in-page scroll, (5) heavy DOM (e.g. many particles) on small viewports.
+
+**Fixes applied:**
+- **Scroll progress bar:** Switched from animating `width` to `transform: scaleX(progress)` so updates are compositor-only and don’t trigger layout; added `width: 100%` and `transform-origin: left` with a short linear transition.
+- **Reduce compositor layers on mobile:** For viewports ≤768px, `.animate-on-scroll` no longer uses `will-change: transform, opacity`, avoiding excess GPU layers that can cause jank on iPhone.
+- **Stable scroll container:** `html` and `body` both use `min-height: 100%`; `html` keeps `overflow-y: scroll` and `-webkit-overflow-scrolling: touch`. Body uses `overscroll-behavior-y: contain` so scroll is contained and rubber-band at document edges is reduced (smoother flow).
+- **Fewer particles on mobile:** Particle count is 10 on viewports ≤768px (vs 30 on desktop) to reduce paint and compositing work during scroll.
+- **Hero video wrap:** `contain: layout` on `.hero-video-wrap` so the hero’s layout is contained and doesn’t affect outside reflow.
+
+Scroll listener already used `{ passive: true }` and `requestAnimationFrame` throttling; no change there. These updates improve scroll and responsiveness across devices, especially iPhone.
+
+---
+
 ## Scroll lock fix (Feb 2026)
 
 **Issue:** Page scrolled initially on load then stopped (mouse wheel, trackpad, touch); no console errors.
