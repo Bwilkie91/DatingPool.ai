@@ -12,6 +12,22 @@ Rating is against the highest bar: enterprise marketing site, mobile-first, acce
 
 ---
 
+## Idea, theme & visuals rating (highest standards) — **77 / 100**
+
+Rated 1–100 against top-tier consumer/marketing sites (concept clarity, brand coherence, art direction, polish).
+
+| Pillar | Score | Notes |
+|--------|-------|------|
+| **Idea** | **82** | Strong, clear differentiator: event-first dating (“find something to do, then someone to do it with”). Chicago event copy and rotating “how we met” phrases are distinctive and shareable. Problem/solution (old way vs DatingPool way) and mission copy land well. Missing: social proof, real waitlist URL, stronger proof of traction. |
+| **Theme** | **78** | Brand is coherent: DatingPool name, “pool” metaphor, “Real dates. Real people. Real places.” Tone is confident, warm, slightly witty. Single font (Outfit) and consistent voice. Could be bolder or more memorable (e.g. stronger tagline, more personality in nav/CTAs). |
+| **Visuals** | **74** | Design system is professional: full tokens (color, space, motion, radius), dark slate + blue primary. Hero (video, phased copy, particles, parallax) is ambitious; section video backgrounds create immersion. How it works step cards have clear color coding; Features carousel has grey treatment. Motion is minimal and respects reduced motion. Gaps: no custom illustration or hero imagery; heavy video reliance; hero text contrast to confirm; no dedicated OG image. |
+
+**Overall (weighted:** Idea 30%, Theme 25%, Visuals 45%): **77 / 100**
+
+**To reach 85+:** Add social proof or early-access story; introduce one hero asset (illustration or key visual) beyond video; lock hero text contrast and add `og:image`; consider a bolder typographic or color moment for the hero.
+
+---
+
 ## Button & interaction UX (quick wins) — Applied Feb 2026
 
 Enterprise-style, minimal-but-classy motion and feedback across all controls:

@@ -1321,40 +1321,6 @@ function App() {
                         </div>
                       </div>
                     )}
-                    <div 
-                      className={`folder-item ${openFolder === 'art-institute' ? 'active' : ''}`}
-                      onClick={() => setOpenFolder(openFolder === 'art-institute' ? null : 'art-institute')}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault()
-                          setOpenFolder(openFolder === 'art-institute' ? null : 'art-institute')
-                        }
-                      }}
-                      tabIndex={0}
-                      role="button"
-                      aria-expanded={openFolder === 'art-institute'}
-                      aria-controls="art-institute-chats"
-                    >
-                      <span className="folder-icon"><Icon name="folder" className="folder-icon-svg" /></span>
-                      <span>After Dark at the Art Institute</span>
-                      <span className="folder-arrow">{openFolder === 'art-institute' ? <Icon name="chevronDown" className="folder-arrow-svg" /> : <Icon name="chevronRight" className="folder-arrow-svg" />}</span>
-                    </div>
-                    {openFolder === 'art-institute' && (
-                      <div id="art-institute-chats" className="chat-list" role="list">
-                        <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
-                          <span className="chat-name">Drew</span>
-                        </div>
-                        <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
-                          <span className="chat-name">Jamie</span>
-                        </div>
-                        <div className="chat-item" role="listitem">
-                          <div className="chat-avatar" aria-hidden="true"><Icon name="user" className="chat-avatar-svg" /></div>
-                          <span className="chat-name">Pat</span>
-                        </div>
-                      </div>
-                    )}
                   </div>
                   <p>Chats live under the event. One folder per event—no more "who was that?" scrolling.</p>
                 </div>

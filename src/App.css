@@ -1713,17 +1713,11 @@ table {
   max-height: min(400px, 50dvh);
 }
 
-.journey .cover-flow-card-wrap:nth-child(1) .cover-flow-card {
-  background: linear-gradient(180deg, rgba(37, 99, 235, 0.45) 0%, rgba(30, 58, 95, 0.98) 100%);
-}
-.journey .cover-flow-card-wrap:nth-child(2) .cover-flow-card {
-  background: linear-gradient(180deg, rgba(168, 85, 247, 0.4) 0%, rgba(55, 35, 75, 0.98) 100%);
-}
-.journey .cover-flow-card-wrap:nth-child(3) .cover-flow-card {
-  background: linear-gradient(180deg, rgba(34, 197, 94, 0.4) 0%, rgba(25, 58, 45, 0.98) 100%);
-}
+.journey .cover-flow-card-wrap:nth-child(1) .cover-flow-card,
+.journey .cover-flow-card-wrap:nth-child(2) .cover-flow-card,
+.journey .cover-flow-card-wrap:nth-child(3) .cover-flow-card,
 .journey .cover-flow-card-wrap:nth-child(4) .cover-flow-card {
-  background: linear-gradient(180deg, rgba(249, 115, 22, 0.42) 0%, rgba(75, 45, 25, 0.98) 100%);
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.65) 0%, rgba(30, 58, 95, 1) 100%);
 }
 
 .journey .cover-flow-card-wrap.is-center .cover-flow-card {
@@ -1816,6 +1810,43 @@ table {
 .cover-flow-card .journey-card .stat-badge {
   font-size: 0.6rem;
   padding: 0.25rem 0.5rem;
+}
+
+/* How it works: colored icon and step number per card — yellow, blue, purple, green */
+.journey .cover-flow-card-wrap:nth-child(1) .journey-card .diff-icon {
+  color: #facc15;
+}
+.journey .cover-flow-card-wrap:nth-child(1) .journey-card .stat-badge {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.35) 0%, rgba(234, 179, 8, 0.15) 100%);
+  color: #fde047;
+  border-color: rgba(234, 179, 8, 0.5);
+}
+
+.journey .cover-flow-card-wrap:nth-child(2) .journey-card .diff-icon {
+  color: #60a5fa;
+}
+.journey .cover-flow-card-wrap:nth-child(2) .journey-card .stat-badge {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.35) 0%, rgba(59, 130, 246, 0.15) 100%);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.journey .cover-flow-card-wrap:nth-child(3) .journey-card .diff-icon {
+  color: #a78bfa;
+}
+.journey .cover-flow-card-wrap:nth-child(3) .journey-card .stat-badge {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.35) 0%, rgba(168, 85, 247, 0.15) 100%);
+  color: #c4b5fd;
+  border-color: rgba(168, 85, 247, 0.5);
+}
+
+.journey .cover-flow-card-wrap:nth-child(4) .journey-card .diff-icon {
+  color: #4ade80;
+}
+.journey .cover-flow-card-wrap:nth-child(4) .journey-card .stat-badge {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.35) 0%, rgba(34, 197, 94, 0.15) 100%);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.5);
 }
 
 /* Smoother visual transition between steps */
@@ -2436,10 +2467,11 @@ table {
   background: rgba(30, 41, 59, 0.88);
 }
 
-/* Features carousel: same grey card treatment as How it works */
+/* Features carousel: same blue card treatment as How it works */
 .differentiators .cover-flow-card {
-  background: linear-gradient(180deg, var(--color-bg-light) 0%, var(--color-bg-medium) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.65) 0%, rgba(30, 58, 95, 1) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: none;
 }
 
 .cover-flow-card-reflect {
@@ -2530,6 +2562,13 @@ table {
   flex: 1;
   min-height: 0;
   width: 100%;
+}
+
+/* Features carousel: allow scroll so last cards never cut off */
+.differentiators .cover-flow-card .differentiator-card .card-content {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .cover-flow-card .differentiator-card .card-content h3 {
@@ -2637,6 +2676,129 @@ table {
 
 .cover-flow-card .flow-item span:last-child {
   font-size: 0.65rem;
+}
+
+/* Features section: tighter sizing so last 3 cards (and all) fit without cut-off/overlap */
+.differentiators .cover-flow-card .differentiator-card {
+  padding: var(--space-3);
+  gap: 0;
+}
+
+.differentiators .cover-flow-card .differentiator-card .card-top {
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.differentiators .cover-flow-card .differentiator-card .card-content {
+  gap: 0.4rem;
+}
+
+.differentiators .cover-flow-card .differentiator-card .card-content h3 {
+  font-size: clamp(0.9375rem, 1.6vw, 1.0625rem);
+}
+
+.differentiators .cover-flow-card .differentiator-card p,
+.differentiators .cover-flow-card .differentiator-card .card-content {
+  font-size: clamp(0.75rem, 1.1vw, 0.875rem);
+  line-height: 1.4;
+}
+
+.differentiators .cover-flow-card .differentiator-card .stat-badge {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.625rem;
+}
+
+.differentiators .cover-flow-card .differentiator-card .feature-icon-wrapper {
+  width: 36px;
+  height: 36px;
+}
+
+.differentiators .cover-flow-card .differentiator-card .diff-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.differentiators .cover-flow-card .visual-timeline,
+.differentiators .cover-flow-card .visual-comparison,
+.differentiators .cover-flow-card .intent-meter,
+.differentiators .cover-flow-card .folder-structure,
+.differentiators .cover-flow-card .verification-steps,
+.differentiators .cover-flow-card .group-flow {
+  margin: 0.25rem 0;
+  padding: 0.4rem 0.5rem;
+  gap: 0.25rem;
+}
+
+.differentiators .cover-flow-card .timeline-item span:last-child,
+.differentiators .cover-flow-card .comparison-label,
+.differentiators .cover-flow-card .meter-label,
+.differentiators .cover-flow-card .flow-item span:last-child {
+  font-size: 0.6rem;
+}
+
+.differentiators .cover-flow-card .comparison-text,
+.differentiators .cover-flow-card .meter-value {
+  font-size: 0.75rem;
+}
+
+.differentiators .cover-flow-card .folder-item {
+  padding: 0.35rem 0.5rem;
+}
+
+.differentiators .cover-flow-card .folder-item span:nth-child(2) {
+  font-size: 0.75rem;
+}
+
+.differentiators .cover-flow-card .chat-list {
+  margin: 0.25rem 0 0.25rem 0.75rem;
+  padding: 0.35rem;
+  gap: 0.2rem;
+}
+
+.differentiators .cover-flow-card .chat-item {
+  padding: 0.3rem 0.4rem;
+  font-size: 0.7rem;
+}
+
+.differentiators .cover-flow-card .chat-avatar {
+  width: 24px;
+  height: 24px;
+}
+
+.differentiators .cover-flow-card .coordination-tools-grid {
+  gap: 0.35rem;
+  padding: 0.4rem;
+  margin: 0.25rem 0;
+}
+
+.differentiators .cover-flow-card .coordination-tool-item {
+  padding: 0.3rem 0.2rem;
+}
+
+.differentiators .cover-flow-card .tool-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.differentiators .cover-flow-card .tool-icon .tool-icon-svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.differentiators .cover-flow-card .tool-name {
+  font-size: 0.55rem;
+}
+
+.differentiators .cover-flow-card .verification-step span:last-child {
+  font-size: 0.75rem;
+}
+
+.differentiators .cover-flow-card .coordination-push,
+.differentiators .cover-flow-card .coordination-note {
+  font-size: 0.7rem;
+  line-height: 1.35;
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
 }
 
 /* Prev/next: ≥44px touch targets, always visible for mobile and web */
@@ -4537,6 +4699,51 @@ table {
 .terms-content b {
   font-weight: 600;
   color: var(--color-text-primary);
+}
+
+.privacy-content {
+  max-width: 52em;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  line-height: 1.65;
+}
+
+.privacy-content h2 { margin-top: 2.5rem; margin-bottom: 1rem; font-size: var(--font-size-xl); font-weight: 700; color: var(--color-text-primary); }
+.privacy-content h3 { margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: var(--font-size-lg); font-weight: 600; color: var(--color-text-primary); }
+.privacy-content p { margin: 0 0 1rem; }
+.privacy-content ul, .privacy-content ol { margin: 0 0 1rem 1.5rem; padding: 0; }
+.privacy-content li { margin-bottom: 0.35rem; }
+.privacy-content strong, .privacy-content b { font-weight: 600; color: var(--color-text-primary); }
+.privacy-content a { color: var(--color-accent, #6366f1); text-decoration: underline; }
+.privacy-content a:hover { text-decoration: none; }
+
+.privacy-contact-box {
+  margin: 1.5rem 0;
+  padding: 1.25rem 1.5rem;
+  background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+}
+
+.privacy-contact-box .privacy-contact-label {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.privacy-contact-box .privacy-contact-email {
+  margin: 0 0 0.5rem;
+  font-size: var(--font-size-lg);
+}
+
+.privacy-contact-box .privacy-contact-email a {
+  font-weight: 600;
+}
+
+.privacy-contact-box .privacy-contact-note {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  opacity: 0.9;
 }
 
 .footer-content {
