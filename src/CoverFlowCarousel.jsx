@@ -212,7 +212,7 @@ export function CoverFlowCarousel({ children, activeIndex, setActiveIndex, ariaL
         className="cover-flow-viewport"
         style={{
           maxWidth: 2 * CARD_SPACING,
-          touchAction: 'none',
+          touchAction: 'pan-y',
         }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}

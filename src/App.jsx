@@ -374,6 +374,52 @@ function App() {
     }
   }, [email, validateEmail])
 
+  // Restore body scroll on unmount (prevents stuck scroll when navigating away with menu open)
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = ''
+      document.body.classList.remove('menu-open')
+    }
+  }, [])
+
+  // Skip link: scroll to main and move focus for keyboard/screen reader
+  const handleSkipClick = useCallback((e) => {
+    const main = document.getElementById('main-content')
+    if (main) {
+      e.preventDefault()
+      main.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      main.focus({ preventScroll: true })
+    }
+  }, [])
+
+  // Focus trap when mobile menu is open: keep Tab/Shift+Tab within menu
+  useEffect(() => {
+    if (!isMobileMenuOpen || !mobileMenuRef.current) return
+    const nav = mobileMenuRef.current
+    const getFocusables = () => Array.from(nav.querySelectorAll('a[href], button')).filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1)
+    const handleKeyDown = (e) => {
+      if (e.key !== 'Tab') return
+      const focusables = getFocusables()
+      if (focusables.length === 0) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const active = document.activeElement
+      if (e.shiftKey) {
+        if (active === first) {
+          e.preventDefault()
+          last.focus()
+        }
+      } else {
+        if (active === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+    nav.addEventListener('keydown', handleKeyDown)
+    return () => nav.removeEventListener('keydown', handleKeyDown)
+  }, [isMobileMenuOpen])
+
   // Close mobile menu when clicking outside or on escape key
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -633,6 +679,9 @@ function App() {
       variants={pageVariants}
       transition={pageTransition}
     >
+      <a href="#main-content" className="skip-link" onClick={handleSkipClick}>
+        Skip to main content
+      </a>
       <AnimatePresence mode="wait">
         {isLoading && (
           <motion.div
@@ -651,9 +700,14 @@ function App() {
 
       <header className={headerClass}>
         <div className="container">
-          <div className="logo" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+          <button
+            type="button"
+            className="logo logo-button"
+            onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            aria-label="DatingPool home"
+          >
             <h1 className="logo-text">DatingPool</h1>
-          </div>
+          </button>
           <button 
             ref={mobileMenuToggleRef}
             className="mobile-menu-toggle"
@@ -726,7 +780,7 @@ function App() {
         </div>
       </header>
 
-      <main>
+      <main id="main-content" tabIndex={-1}>
         {/* Scroll Progress Indicator */}
         <div className="scroll-progress-bar" style={{ width: `${scrollProgress}%` }}></div>
         

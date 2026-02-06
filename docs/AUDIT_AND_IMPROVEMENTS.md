@@ -20,7 +20,7 @@ Rating is against the highest bar: enterprise marketing site, mobile-first, acce
 - **Video:** Hero/CTA use `muted`, `playsInline` (iOS autoplay).
 - **Touch targets:** Mobile menu toggle and CTA meet ≥44px where required; nav links get adequate padding.
 - **Inputs:** Waitlist input uses ≥16px font and touch-friendly styles to avoid iOS zoom and improve tap.
-- **Meta:** `theme-color`, `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, `format-detection` added for status bar and link handling.
+- **Meta:** `theme-color`, `mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, `format-detection` added for status bar and link handling.
 
 ### Gaps and improvements
 | Priority | Item | Action |
@@ -124,9 +124,10 @@ Rating is against the highest bar: enterprise marketing site, mobile-first, acce
 
 ## 7. Applied Optimizations (This Pass)
 
-- **index.html:** `theme-color`, meta description, `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, `format-detection`.
+- **index.html:** `theme-color`, meta description, `mobile-web-app-capable` (replaced deprecated `apple-mobile-web-app-capable`), `apple-mobile-web-app-status-bar-style`, `format-detection`. OG and Twitter Card meta added.
 - **Touch:** Mobile menu toggle given 44×44px minimum and `touch-action: manipulation` / `-webkit-tap-highlight-color: transparent`.
-- **Inputs:** Waitlist input `font-size: max(16px, …)`, tap highlight and touch-action for better iOS/Android behavior.
+- **Inputs:** Waitlist input `font-size: max(16px, …)`, tap highlight and touch-action for better iOS/Android behavior. Waitlist has visible label, `aria-invalid`, `aria-describedby` for errors.
+- **Scrollability:** Carousel viewport uses `touch-action: pan-y` so vertical page scroll works through the carousel; `body.menu-open` uses only `overflow: hidden` (no `position: fixed`) to avoid page getting stuck; App unmount cleanup restores `body` overflow and removes `menu-open` class.
 
 ---
 
