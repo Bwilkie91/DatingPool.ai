@@ -1644,18 +1644,18 @@ table {
   margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
 }
 
-/* Journey: flat floating cards — no gray container, border + shadow only */
+/* Journey: cards on page with background, no container box */
 .journey .cover-flow-card {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+  background: rgba(30, 41, 59, 0.88);
+  border: none;
+  box-shadow: none;
   min-height: min(360px, 46dvh);
   height: min(380px, 48dvh);
   max-height: min(400px, 50dvh);
 }
 
 .journey .cover-flow-card-wrap.is-center .cover-flow-card {
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+  box-shadow: none;
 }
 
 .journey .cover-flow-card-reflect {
@@ -2344,7 +2344,7 @@ table {
   outline: none;
 }
 
-/* Card: flat floating look — no gray container, border + shadow only */
+/* Card: background on page, no container (no border/shadow) */
 .cover-flow-card {
   width: 400px;
   min-height: min(640px, 78dvh);
@@ -2355,20 +2355,18 @@ table {
   margin-left: -40px;
   border-radius: var(--border-radius-lg);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
-  background: transparent;
+  border: none;
+  box-shadow: none;
+  background: rgba(30, 41, 59, 0.88);
 }
 
 .cover-flow-card-reflect {
   -webkit-box-reflect: unset;
 }
 
-/* Center card: floating emphasis via shadow only */
 .cover-flow-card-wrap.is-center .cover-flow-card {
   pointer-events: auto;
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+  box-shadow: none;
 }
 
 /* ——— Carousel cards: flat floating, no gradient accents ——— */
@@ -2931,13 +2929,13 @@ table {
 }
 
 .differentiator-card {
-  background: transparent;
+  background: rgba(30, 41, 59, 0.88);
   padding: var(--space-6);
   border-radius: var(--border-radius-lg);
   text-align: left;
   box-shadow: none;
-  transition: box-shadow var(--transition-base), border-color var(--transition-base), transform var(--transition-base);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background var(--transition-base), transform var(--transition-base);
+  border: none;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -3274,8 +3272,7 @@ table {
 
 .differentiator-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: rgba(37, 99, 235, 0.2);
+  box-shadow: none;
 }
 
 /* Visual Timeline — no gray container */
@@ -5762,8 +5759,8 @@ button:active,
 
 .differentiator-card:hover,
 .journey-step:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(37, 99, 246, 0.2);
+  transform: translateY(-2px);
+  box-shadow: none;
 }
 
 /* Cursor Effects */
