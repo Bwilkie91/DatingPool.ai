@@ -907,6 +907,26 @@ function App() {
               )}
             </motion.div>
           </div>
+          <button
+            type="button"
+            className="hero-chevron hero-chevron-prev"
+            onClick={() => goToHeroSlide((heroSlideIndex - 1 + HERO_SLIDE_COUNT) % HERO_SLIDE_COUNT)}
+            aria-label="Previous slide"
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="hero-chevron hero-chevron-next"
+            onClick={() => goToHeroSlide((heroSlideIndex + 1) % HERO_SLIDE_COUNT)}
+            aria-label="Next slide"
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
           <div
             className="hero-dots"
             role="tablist"
