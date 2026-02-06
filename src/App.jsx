@@ -1714,7 +1714,7 @@ function App() {
               </Link>
             </div>
             <div className="footer-copyright">
-              <p>Copyright © 2025 DatingPool LLC. All rights reserved.</p>
+              <p>Copyright © 2026 DatingPool LLC. All rights reserved.</p>
             </div>
           </div>
         </div>
