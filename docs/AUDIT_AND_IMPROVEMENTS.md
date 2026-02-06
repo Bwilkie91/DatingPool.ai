@@ -12,6 +12,27 @@ Rating is against the highest bar: enterprise marketing site, mobile-first, acce
 
 ---
 
+## Button & interaction UX (quick wins) — Applied Feb 2026
+
+Enterprise-style, minimal-but-classy motion and feedback across all controls:
+
+| Control | Change |
+|--------|--------|
+| **Logo** | Hover scale 1.05 → 1.02; design-token transition. |
+| **Mobile menu toggle** | Hover 1.05 → 1.02, active 0.95 → 0.98; hamburger bars use `--duration-fast` + `--ease-in-out-smooth`. |
+| **Nav CTA** | Softer hover shadow; active shadow reduced. |
+| **Cover-flow prev/next** | Hover scale 1.08 → 1.04, active 0.96 → 0.98; lighter hover bg. |
+| **Cover-flow dots** | Hover scale 1.1 → 1.06, active 1.2 → 1.12. |
+| **Waitlist button** | Ripple 300px → 180px, opacity 0.2 → 0.12; lift -2px → -1px; arrow 4px → 2px; transition tokens. |
+| **Folder items** | Hover translateX 3px → 2px; explicit transition on background + transform. |
+| **Cards (Framer)** | whileHover scale 1.02/y -2 → 1.01/y -1; whileTap 0.99 → 0.995. |
+| **Waitlist input** | whileFocus 1.02 → 1.01; spring → 0.2s ease. |
+| **Global** | Generic `button:active` scale(0.95) removed to avoid overriding specific controls; hover lift in media query set to -1px. |
+
+All transitions use design tokens (`--duration-fast`, `--ease-out-expo`, `--ease-in-out-smooth`) where applicable. Reduced motion and touch layouts unchanged.
+
+---
+
 ## 1. Mobile (iOS & Android) — Score: 75/100
 
 ### What’s working

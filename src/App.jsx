@@ -80,7 +80,7 @@ function App() {
   }, [])
   const reduceCardMotion = prefersReducedMotion || isNarrow
   const cardMotionProps = useMemo(
-    () => (reduceCardMotion ? {} : { whileHover: { scale: 1.02, y: -2 }, whileTap: { scale: 0.99 } }),
+    () => (reduceCardMotion ? {} : { whileHover: { scale: 1.01, y: -1 }, whileTap: { scale: 0.995 } }),
     [reduceCardMotion]
   )
 
@@ -1662,8 +1662,8 @@ function App() {
                     aria-invalid={!!emailError}
                     aria-describedby={emailError ? 'email-error' : submitSuccess ? 'submit-success' : undefined}
                     disabled={isSubmitting}
-                    whileFocus={{ scale: 1.02 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    whileFocus={{ scale: 1.01 }}
+                    transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
                   />
                   {emailError && (
                     <div id="email-error" className="waitlist-error" role="alert" aria-live="assertive">
@@ -1680,7 +1680,7 @@ function App() {
                   type="submit"
                   className="waitlist-button"
                   {...cardMotionProps}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
                   aria-label="Join the DatingPool waitlist"
                   disabled={isSubmitting || !!emailError}
                   aria-busy={isSubmitting}
