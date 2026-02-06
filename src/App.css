@@ -2394,6 +2394,16 @@ table {
   font-weight: 600;
 }
 
+.mission-text a {
+  color: var(--color-primary-light);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.mission-text a:hover {
+  text-decoration: none;
+}
+
 /* Cover Flow Carousel — redesigned: more space, fit-all copy, premium look */
 .cover-flow {
   position: relative;

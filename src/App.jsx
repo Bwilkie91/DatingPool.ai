@@ -1092,7 +1092,7 @@ function App() {
               <div className="mission-text animate-on-scroll">
                 <p>
                   <strong>Here's the thing:</strong> Traditional dating apps were built for a different era. They're designed to keep you swiping, 
-                  not meeting. They profit from your time on the app, not your success off it. We saw the problem and decided to fix it.
+                  not meeting. They profit from your time on the app, not your success off it. We saw <a href="https://www.ftc.gov/news-events/news/press-releases/2025/08/match-group-agrees-pay-14-million-permanently-stop-deceptive-advertising-cancellation-billing" target="_blank" rel="noopener noreferrer">the problem</a> and decided to fix it.
                 </p>
                 <p>
                   We've all been there: swiping endlessly, conversations that go nowhere, dates that never happen. So we asked: <strong>What if dating apps actually led to dates?</strong>
