@@ -265,7 +265,9 @@ export function CoverFlowCarousel({ children, activeIndex, setActiveIndex, ariaL
                 aria-current={isCenter ? 'true' : undefined}
               >
                 <div className="cover-flow-card cover-flow-card-reflect">
-                  {card}
+                  <div className="cover-flow-card-inner" aria-hidden="true">
+                    {card}
+                  </div>
                 </div>
               </motion.div>
             )

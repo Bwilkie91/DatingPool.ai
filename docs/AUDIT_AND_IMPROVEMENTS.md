@@ -33,14 +33,28 @@ All transitions use design tokens (`--duration-fast`, `--ease-out-expo`, `--ease
 
 ---
 
+## Scroll lock fix (Feb 2026)
+
+**Issue:** Page scrolled initially on load then stopped (mouse wheel, trackpad, touch); no console errors.
+
+**Cause:** (1) In some browsers, `overflow-x: hidden` on `html`/`body` without explicit `overflow-y` can block vertical scroll. (2) **Main cause:** Multiple effects and handlers were toggling `document.body.style.overflow` and `menu-open`; effect order and cleanup could leave body stuck with `overflow: hidden` after re-renders (e.g. when loading finished or other state updated).
+
+**Fix applied:**
+- **Single source of truth:** One `useLayoutEffect` with dependency `[isMobileMenuOpen]` is the only code that sets body overflow and `menu-open`. When menu is closed we set `overflow: 'auto'`; when open we set `overflow: 'hidden'`. Cleanup always restores `'auto'`. So every commit re-syncs body to state and scroll cannot get stuck.
+- **Menu effect:** Only adds/removes click-outside and Escape listeners; no longer touches body. Handlers only call `setIsMobileMenuOpen(false)` and focus; layout effect handles unlock.
+- **scrollToSection / toggleMobileMenu:** No longer set body overflow or class; they only update state and focus.
+- **CSS:** `overflow-y: auto` on `html` and `body` so vertical scroll is explicitly allowed.
+
+---
+
 ## 1. Mobile (iOS & Android) — Score: 75/100
 
 ### What’s working
 - **Viewport:** `viewport-fit=cover`, safe-area insets used in CSS (`--safe-*`).
 - **Touch:** `-webkit-overflow-scrolling: touch`, `touch-action: manipulation`, `-webkit-tap-highlight-color` on key controls.
 - **Video:** Hero/CTA use `muted`, `playsInline` (iOS autoplay).
-- **Touch targets:** Mobile menu toggle and CTA meet ≥44px where required; nav links get adequate padding.
-- **Inputs:** Waitlist input uses ≥16px font and touch-friendly styles to avoid iOS zoom and improve tap.
+- **Touch targets (Feb 2026):** All primary controls meet ≥44×44px (WCAG 2.5 / iOS HIG): skip link, logo button, nav links, mobile menu toggle, waitlist button & input, folder items, footer link; cover-flow prev/next 52px, dots 48px. `touch-action: manipulation` and tap-highlight on interactive elements.
+- **Inputs:** Waitlist input uses ≥16px font, min-height 44px, and touch-friendly styles to avoid iOS zoom and improve tap.
 - **Meta:** `theme-color`, `mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, `format-detection` added for status bar and link handling.
 
 ### Gaps and improvements

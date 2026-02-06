@@ -97,18 +97,20 @@ body {
   color: var(--color-text-primary);
 }
 
-/* Prevent horizontal scroll on all devices */
+/* Prevent horizontal scroll; keep vertical scroll explicitly enabled for trackpad/wheel */
 html {
   overflow-x: hidden;
+  overflow-y: scroll; /* scroll (not auto) so document is clearly the scroll container for trackpad */
   -webkit-overflow-scrolling: touch;
 }
 
 body {
   max-width: 100vw;
   overflow-x: hidden;
+  overflow-y: scroll;
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: auto; /* allow native overscroll; none can break trackpad on some browsers */
 }
 
 /* Prevent overflow on all elements */
@@ -169,13 +171,18 @@ table {
 }
 
 /* App Container */
-/* Skip link: visible on focus for keyboard users */
+/* Skip link: visible on focus; ≥44px touch target, touch-friendly */
 .skip-link {
   position: absolute;
   top: 0;
   left: 0;
   z-index: 10000;
   padding: 0.75rem 1.25rem;
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--color-primary);
   color: white;
   font-weight: 600;
@@ -183,6 +190,8 @@ table {
   border-radius: 0 0 var(--border-radius-md) 0;
   transform: translateY(-100%);
   transition: transform var(--duration-fast) var(--ease-out-expo);
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0.2);
+  touch-action: manipulation;
 }
 .skip-link:focus {
   transform: translateY(0);
@@ -374,8 +383,14 @@ table {
   border: none;
   font: inherit;
   color: inherit;
-  padding: 0;
-  display: block;
+  padding: 0.5rem;
+  margin: -0.5rem;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 .logo-button:focus-visible {
   outline: none;
@@ -426,6 +441,8 @@ table {
   cursor: pointer;
   border-radius: 8px;
   white-space: nowrap;
+  -webkit-tap-highlight-color: rgba(37, 99, 235, 0.15);
+  touch-action: manipulation;
 }
 
 /* Underline: only for non-CTA links; single clean line on active */
@@ -1687,14 +1704,26 @@ table {
   margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
 }
 
-/* Journey: cards on page with background, no container box */
+/* Journey: cards on page with colored backgrounds per step */
 .journey .cover-flow-card {
-  background: rgba(30, 41, 59, 0.88);
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: none;
   min-height: min(360px, 46dvh);
   height: min(380px, 48dvh);
   max-height: min(400px, 50dvh);
+}
+
+.journey .cover-flow-card-wrap:nth-child(1) .cover-flow-card {
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.45) 0%, rgba(30, 58, 95, 0.98) 100%);
+}
+.journey .cover-flow-card-wrap:nth-child(2) .cover-flow-card {
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.4) 0%, rgba(55, 35, 75, 0.98) 100%);
+}
+.journey .cover-flow-card-wrap:nth-child(3) .cover-flow-card {
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.4) 0%, rgba(25, 58, 45, 0.98) 100%);
+}
+.journey .cover-flow-card-wrap:nth-child(4) .cover-flow-card {
+  background: linear-gradient(180deg, rgba(249, 115, 22, 0.42) 0%, rgba(75, 45, 25, 0.98) 100%);
 }
 
 .journey .cover-flow-card-wrap.is-center .cover-flow-card {
@@ -1710,13 +1739,17 @@ table {
   height: min(400px, 50dvh);
 }
 
-/* Journey cards: smaller type, word wrap on all devices, tighter spacing */
+/* Journey cards: grey from parent .cover-flow-card; inner transparent so gradient shows */
 .cover-flow-card .journey-card {
   min-width: 0;
   overflow-wrap: break-word;
   word-wrap: break-word;
   word-break: break-word;
   hyphens: auto;
+}
+.journey .cover-flow-card .journey-card,
+.journey .cover-flow-card .differentiator-card {
+  background: transparent;
 }
 
 .cover-flow-card .journey-card .card-content {
@@ -2403,8 +2436,25 @@ table {
   background: rgba(30, 41, 59, 0.88);
 }
 
+/* Features carousel: same grey card treatment as How it works */
+.differentiators .cover-flow-card {
+  background: linear-gradient(180deg, var(--color-bg-light) 0%, var(--color-bg-medium) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .cover-flow-card-reflect {
   -webkit-box-reflect: unset;
+}
+
+/* Invisible inner container: no visual style, fills card for layout/hit area */
+.cover-flow-card-inner {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: block;
+  background: transparent;
+  border: none;
+  box-sizing: border-box;
 }
 
 .cover-flow-card-wrap.is-center .cover-flow-card {
@@ -3506,13 +3556,17 @@ table {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem;
+  padding: 0.75rem 1rem;
+  min-height: 44px;
+  box-sizing: border-box;
   background: rgba(168, 85, 247, 0.05);
   border-radius: var(--border-radius-sm);
   transition: background var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out-expo);
   cursor: pointer;
   user-select: none;
   position: relative;
+  -webkit-tap-highlight-color: rgba(168, 85, 247, 0.2);
+  touch-action: manipulation;
 }
 
 .folder-item:hover {
@@ -4215,12 +4269,16 @@ table {
 .waitlist-input {
   width: 100%;
   padding: 1rem 1.5rem;
+  min-height: 44px;
+  box-sizing: border-box;
   background: rgba(31, 41, 55, 0.8);
   border: 2px solid rgba(37, 99, 235, 0.3);
   border-radius: var(--border-radius-full);
   color: var(--color-text-primary);
   font-size: max(16px, clamp(1rem, 2vw, 1.1rem));
   font-weight: 400;
+  -webkit-tap-highlight-color: rgba(37, 99, 235, 0.1);
+  touch-action: manipulation;
   outline: none;
   transition: all var(--transition-base);
   backdrop-filter: blur(10px);
@@ -4313,6 +4371,7 @@ table {
   background: var(--color-primary);
   color: white;
   padding: var(--space-4) var(--space-8);
+  min-height: 44px;
   border-radius: var(--border-radius-full);
   font-size: var(--font-size-base);
   font-weight: 600;
@@ -4322,6 +4381,8 @@ table {
   border: none;
   cursor: pointer;
   width: 100%;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0.2);
+  touch-action: manipulation;
 }
 
 .waitlist-button svg {
@@ -4542,8 +4603,15 @@ table {
   font-size: var(--font-size-base);
   font-weight: 500;
   transition: color var(--transition-base), background var(--transition-base);
-  padding: var(--space-2) var(--space-4);
+  padding: 0.75rem 1.25rem;
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--border-radius-sm);
+  -webkit-tap-highlight-color: rgba(37, 99, 235, 0.15);
+  touch-action: manipulation;
 }
 
 .footer-link:hover {
@@ -5317,12 +5385,18 @@ table {
     box-sizing: border-box;
   }
 
-  /* Ensure touch targets are at least 44x44px */
+  /* Ensure touch targets are at least 44x44px (WCAG 2.5 / iOS HIG) */
+  .skip-link,
+  .logo-button,
   .nav-link,
   .waitlist-button,
-  .mobile-menu-toggle {
+  .mobile-menu-toggle,
+  .footer-link {
     min-height: 44px;
     min-width: 44px;
+  }
+  .waitlist-input {
+    min-height: 44px;
   }
 
   /* Prevent text overflow */

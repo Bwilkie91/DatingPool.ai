@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useInView } from 'react-intersection-observer'
 import { motion, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence, useReducedMotion } from 'framer-motion'
@@ -266,46 +266,29 @@ function App() {
   // Smooth scroll to section
   const scrollToSection = useCallback((e, sectionId) => {
     e.preventDefault()
-    setIsMobileMenuOpen(false) // Close mobile menu on navigation
-    document.body.style.overflow = ''
-    document.body.classList.remove('menu-open')
-    // Return focus to toggle so aria-hidden on nav doesn't hide focused element
+    setIsMobileMenuOpen(false)
     if (mobileMenuToggleRef.current) {
       mobileMenuToggleRef.current.focus()
     }
     const element = document.getElementById(sectionId)
     if (element) {
-      element.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start' 
-      })
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }, [])
 
-  // Toggle mobile menu with focus management
+  // Toggle mobile menu; focus management only (scroll lock is handled in useLayoutEffect)
   const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen(prev => {
       const newState = !prev
-      // Prevent body scroll when menu is open
       if (newState) {
-        document.body.style.overflow = 'hidden'
-        document.body.classList.add('menu-open')
-        // Focus management: move focus to menu when opened
         setTimeout(() => {
           if (mobileMenuRef.current) {
             const firstLink = mobileMenuRef.current.querySelector('a')
-            if (firstLink) {
-              firstLink.focus()
-            }
+            if (firstLink) firstLink.focus()
           }
         }, 100)
-      } else {
-        document.body.style.overflow = ''
-        document.body.classList.remove('menu-open')
-        // Restore focus to toggle button when closed
-        if (mobileMenuToggleRef.current) {
-          mobileMenuToggleRef.current.focus()
-        }
+      } else if (mobileMenuToggleRef.current) {
+        mobileMenuToggleRef.current.focus()
       }
       return newState
     })
@@ -374,13 +357,21 @@ function App() {
     }
   }, [email, validateEmail])
 
-  // Restore body scroll on unmount (prevents stuck scroll when navigating away with menu open)
-  useEffect(() => {
-    return () => {
-      document.body.style.overflow = ''
+  // Single source of truth for body scroll lock: runs after every commit so scroll never gets stuck.
+  // When menu is closed we always force scrollable; when menu is open we lock. Explicit 'auto' avoids browser quirks.
+  useLayoutEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+      document.body.classList.add('menu-open')
+    } else {
+      document.body.style.overflow = 'auto'
       document.body.classList.remove('menu-open')
     }
-  }, [])
+    return () => {
+      document.body.style.overflow = 'auto'
+      document.body.classList.remove('menu-open')
+    }
+  }, [isMobileMenuOpen])
 
   // Skip link: scroll to main and move focus for keyboard/screen reader
   const handleSkipClick = useCallback((e) => {
@@ -426,8 +417,6 @@ function App() {
       try {
         if (isMobileMenuOpen && !e.target.closest('.nav') && !e.target.closest('.mobile-menu-toggle')) {
           setIsMobileMenuOpen(false)
-          document.body.style.overflow = ''
-          document.body.classList.remove('menu-open')
           if (mobileMenuToggleRef.current) {
             mobileMenuToggleRef.current.focus()
           }
@@ -441,11 +430,7 @@ function App() {
       try {
         if (e.key === 'Escape' && isMobileMenuOpen) {
           setIsMobileMenuOpen(false)
-          document.body.style.overflow = ''
-          if (mobileMenuToggleRef.current) {
-            mobileMenuToggleRef.current.focus()
-          }
-          document.body.classList.remove('menu-open')
+          if (mobileMenuToggleRef.current) mobileMenuToggleRef.current.focus()
         }
       } catch (error) {
         console.warn('Error handling escape key:', error)
@@ -453,32 +438,12 @@ function App() {
     }
 
     if (isMobileMenuOpen) {
-      try {
-        document.addEventListener('click', handleClickOutside, { passive: true })
-        document.addEventListener('keydown', handleEscape, { passive: true })
-        document.body.style.overflow = 'hidden'
-        document.body.classList.add('menu-open')
-      } catch (error) {
-        console.warn('Error setting up mobile menu listeners:', error)
-      }
-    } else {
-      try {
-        document.body.style.overflow = ''
-        document.body.classList.remove('menu-open')
-      } catch (error) {
-        console.warn('Error cleaning up mobile menu:', error)
-      }
+      document.addEventListener('click', handleClickOutside, { passive: true })
+      document.addEventListener('keydown', handleEscape, { passive: true })
     }
-
     return () => {
-      try {
-        document.removeEventListener('click', handleClickOutside)
-        document.removeEventListener('keydown', handleEscape)
-        document.body.style.overflow = ''
-        document.body.classList.remove('menu-open')
-      } catch (error) {
-        console.warn('Error removing mobile menu listeners:', error)
-      }
+      document.removeEventListener('click', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
     }
   }, [isMobileMenuOpen])
 
@@ -1249,6 +1214,16 @@ function App() {
                     <div 
                       className={`folder-item ${openFolder === 'pizza-workshop' ? 'active' : ''}`}
                       onClick={() => setOpenFolder(openFolder === 'pizza-workshop' ? null : 'pizza-workshop')}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          setOpenFolder(openFolder === 'pizza-workshop' ? null : 'pizza-workshop')
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-expanded={openFolder === 'pizza-workshop'}
+                      aria-controls="pizza-workshop-chats"
                     >
                       <span className="folder-icon"><Icon name="folder" className="folder-icon-svg" /></span>
                       <span>Pizza Making Workshop</span>
@@ -1706,7 +1681,7 @@ function App() {
               <p>Real dates. Real people. Real places.</p>
             </div>
             <div className="footer-links">
-              <Link to="/partner" className="footer-link partner-portal-link" aria-hidden="true">
+              <Link to="/partner" className="footer-link partner-portal-link" aria-label="Partner Portal">
                 Partner Portal
               </Link>
             </div>
