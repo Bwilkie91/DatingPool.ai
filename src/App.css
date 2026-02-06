@@ -235,7 +235,7 @@ table {
   position: relative;
 }
 
-/* Mobile Menu Toggle */
+/* Mobile Menu Toggle — 44px min touch target (iOS/Android) */
 .mobile-menu-toggle {
   display: none;
   background: rgba(37, 99, 235, 0.1);
@@ -243,10 +243,16 @@ table {
   border-radius: 8px;
   cursor: pointer;
   padding: 0.75rem;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
   z-index: 101;
   position: relative;
   color: white;
   transition: all var(--transition-base);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .mobile-menu-toggle:hover {
@@ -614,8 +620,7 @@ table {
   font-weight: 700;
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
-  color: royalblue;
-  font-style: italic;
+  color: var(--color-text-primary);
 }
 
 
@@ -646,16 +651,14 @@ table {
   margin-bottom: clamp(var(--space-4), 3vh, var(--space-6));
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
-  color: royalblue;
-  font-style: italic;
+  color: var(--color-text-primary);
 }
 
 .hero-subtitle {
   font-size: clamp(0.9375rem, 2vw + 0.75rem, 1.125rem);
   margin-bottom: clamp(var(--space-4), 2vh, var(--space-6));
   line-height: var(--line-height-relaxed);
-  color: royalblue;
-  font-style: italic;
+  color: var(--color-text-secondary);
   max-width: min(36em, 100%);
   margin-left: auto;
   margin-right: auto;
@@ -663,9 +666,8 @@ table {
 }
 
 .hero-subtitle strong {
-  color: royalblue;
+  color: var(--color-text-primary);
   font-weight: 600;
-  font-style: italic;
 }
 
 .hero-subtitle-secondary {
@@ -707,8 +709,7 @@ table {
   margin-top: clamp(var(--space-4), 2vh, var(--space-6));
   margin-bottom: 0;
   line-height: var(--line-height-relaxed);
-  color: royalblue;
-  font-style: italic;
+  color: #fff;
   max-width: min(36em, 100%);
   margin-left: auto;
   margin-right: auto;
@@ -1618,6 +1619,134 @@ table {
   z-index: 1;
 }
 
+.journey .cover-flow {
+  margin-top: clamp(2rem, 5vw, 3rem);
+  margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+/* Journey: flat floating cards — no gray container, border + shadow only */
+.journey .cover-flow-card {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+  min-height: min(360px, 46dvh);
+  height: min(380px, 48dvh);
+  max-height: min(400px, 50dvh);
+}
+
+.journey .cover-flow-card-wrap.is-center .cover-flow-card {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+}
+
+.journey .cover-flow-card-reflect {
+  -webkit-box-reflect: unset;
+}
+
+.journey .cover-flow-card-wrap {
+  min-height: min(400px, 50dvh);
+  height: min(400px, 50dvh);
+}
+
+/* Journey cards: smaller type, word wrap on all devices, tighter spacing */
+.cover-flow-card .journey-card {
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.cover-flow-card .journey-card .card-content {
+  min-width: 0;
+  gap: 0.5rem;
+  padding: 0.1rem 0;
+}
+
+.cover-flow-card .journey-card .card-content h3 {
+  font-size: clamp(0.875rem, 1.6vw, 1rem);
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.cover-flow-card .journey-card .card-content p {
+  font-size: clamp(0.75rem, 1.1vw, 0.8125rem);
+  line-height: 1.4;
+  margin: 0;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.cover-flow-card .journey-card .step-you-get {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-sm);
+  box-shadow: none;
+}
+
+.cover-flow-card .journey-card .step-you-get strong {
+  font-size: 0.65rem;
+}
+
+.cover-flow-card .journey-card .step-you-get span {
+  font-size: clamp(0.6875rem, 1vw, 0.75rem);
+  line-height: 1.35;
+}
+
+.cover-flow-card .journey-card .card-top {
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.cover-flow-card .journey-card .feature-icon-wrapper {
+  width: 36px;
+  height: 36px;
+}
+
+.cover-flow-card .journey-card .diff-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.cover-flow-card .journey-card .stat-badge {
+  font-size: 0.6rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Smoother visual transition between steps */
+.journey .cover-flow-viewport {
+  transition: opacity 0.2s ease;
+}
+
+.journey .cover-flow-dots {
+  margin-top: clamp(1rem, 3vw, 1.5rem);
+  gap: 0.5rem;
+}
+
+.journey-card:hover .step-you-get {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.differentiator-card[data-step] {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.differentiator-card[data-step]:hover {
+  border: none;
+  box-shadow: none;
+}
+
 .journey-steps {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -2011,6 +2140,14 @@ table {
   z-index: 1;
 }
 
+.features-carousel-intro {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+}
+
 /* Fallback when video not yet loaded (lazy) */
 .differentiators-video-placeholder {
   background: var(--color-bg-dark);
@@ -2186,7 +2323,7 @@ table {
   outline: none;
 }
 
-/* Card: simplified — flat panel, light shadow, clear hierarchy */
+/* Card: flat floating look — no gray container, border + shadow only */
 .cover-flow-card {
   width: 400px;
   min-height: min(640px, 78dvh);
@@ -2197,37 +2334,23 @@ table {
   margin-left: -40px;
   border-radius: var(--border-radius-lg);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  background: rgba(30, 41, 59, 0.96);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+  background: transparent;
 }
 
-/* Minimal reflection */
 .cover-flow-card-reflect {
-  -webkit-box-reflect: below 2px linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0, 0, 0, 0.03) 40%,
-    transparent 55%
-  );
+  -webkit-box-reflect: unset;
 }
 
-@supports not (-webkit-box-reflect: below 0 linear-gradient(transparent, transparent)) {
-  .cover-flow-card-reflect {
-    -webkit-box-reflect: unset;
-  }
-}
-
-/* Center card: subtle emphasis, no heavy glow */
+/* Center card: floating emphasis via shadow only */
 .cover-flow-card-wrap.is-center .cover-flow-card {
   pointer-events: auto;
   border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
 }
 
-/* ——— Carousel cards: compact layout so all writing fits ——— */
+/* ——— Carousel cards: flat floating, no gradient accents ——— */
 .cover-flow-card .differentiator-card {
   height: 100%;
   min-height: 0;
@@ -2241,6 +2364,16 @@ table {
   border: none;
   box-shadow: none;
   background: transparent;
+}
+
+.cover-flow-card .differentiator-card::before,
+.cover-flow-card .differentiator-card::after {
+  display: none;
+}
+
+.cover-flow-card .differentiator-card[data-feature]:hover,
+.cover-flow-card .differentiator-card[data-step]:hover {
+  box-shadow: none;
 }
 
 .cover-flow-card .differentiator-card:not(.animate-in) {
@@ -2488,6 +2621,25 @@ table {
   box-shadow: 0 0 0 2px var(--color-primary);
 }
 
+/* Mobile & reduced-motion: fewer animations, less GPU work */
+@media (prefers-reduced-motion: reduce), (max-width: 768px) {
+  .differentiator-card {
+    transition: none;
+  }
+  .cover-flow-card-wrap {
+    backface-visibility: visible;
+  }
+}
+
+@media (max-width: 768px) {
+  .cover-flow-ipod .cover-flow-viewport {
+    perspective: none;
+  }
+  .cover-flow-card-wrap:not(.is-center) {
+    contain: layout paint;
+  }
+}
+
 @media (max-width: 900px) {
   .cover-flow-ipod .cover-flow-viewport {
     perspective: 1100px;
@@ -2590,6 +2742,17 @@ table {
     margin-left: -40px;
   }
 
+  .journey .cover-flow-card {
+    min-height: min(300px, 42dvh);
+    height: min(320px, 44dvh);
+    max-height: min(350px, 46dvh);
+  }
+
+  .journey .cover-flow-card-wrap {
+    min-height: min(340px, 46dvh);
+    height: min(340px, 46dvh);
+  }
+
   .cover-flow-card .differentiator-card {
     padding: var(--space-3);
   }
@@ -2622,6 +2785,19 @@ table {
   .cover-flow-card .differentiator-card .card-content {
     font-size: 0.75rem;
     line-height: 1.4;
+  }
+
+  .cover-flow-card .journey-card .card-content h3 {
+    font-size: 0.8125rem;
+  }
+
+  .cover-flow-card .journey-card .card-content p {
+    font-size: 0.6875rem;
+    line-height: 1.38;
+  }
+
+  .cover-flow-card .journey-card .step-you-get span {
+    font-size: 0.625rem;
   }
 
   .cover-flow-card .visual-timeline,
@@ -2734,13 +2910,13 @@ table {
 }
 
 .differentiator-card {
-  background: var(--color-bg-medium);
+  background: transparent;
   padding: var(--space-6);
   border-radius: var(--border-radius-lg);
   text-align: left;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
   transition: box-shadow var(--transition-base), border-color var(--transition-base), transform var(--transition-base);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -3081,7 +3257,7 @@ table {
   border-color: rgba(37, 99, 235, 0.2);
 }
 
-/* Visual Timeline */
+/* Visual Timeline — no gray container */
 .visual-timeline {
   display: flex;
   align-items: center;
@@ -3089,13 +3265,18 @@ table {
   gap: 0.4rem;
   margin: 0.75rem 0;
   padding: 0.75rem;
-  background: rgba(37, 99, 235, 0.05);
+  background: transparent;
   border-radius: var(--border-radius-md);
-  border: 1px solid rgba(37, 99, 235, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   flex-wrap: wrap;
   width: 100%;
   box-sizing: border-box;
   flex-shrink: 0;
+}
+
+.cover-flow-card .visual-timeline {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .timeline-item {
@@ -3137,7 +3318,7 @@ table {
   flex-shrink: 0;
 }
 
-/* Visual Comparison */
+/* Visual Comparison — no gray container */
 .visual-comparison {
   display: flex;
   align-items: center;
@@ -3145,8 +3326,9 @@ table {
   gap: 0.75rem;
   margin: 0.75rem 0;
   padding: 0.75rem;
-  background: rgba(37, 99, 235, 0.05);
+  background: transparent;
   border-radius: var(--border-radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
 }
 
@@ -3204,9 +3386,9 @@ table {
 .intent-meter {
   margin: 0.75rem 0;
   padding: 0.75rem;
-  background: rgba(249, 115, 22, 0.05);
+  background: transparent;
   border-radius: var(--border-radius-md);
-  border: 1px solid rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
 }
 
@@ -3250,9 +3432,9 @@ table {
   gap: 0.5rem;
   margin: 0.75rem 0;
   padding: 0.75rem;
-  background: rgba(168, 85, 247, 0.05);
+  background: transparent;
   border-radius: var(--border-radius-md);
-  border: 1px solid rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
   width: 100%;
   max-width: 100%;
@@ -3406,9 +3588,9 @@ table {
   gap: 0.5rem;
   margin: 0.75rem 0;
   padding: 0.75rem;
-  background: rgba(34, 197, 94, 0.05);
+  background: transparent;
   border-radius: var(--border-radius-md);
-  border: 1px solid rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
 }
 
@@ -3536,9 +3718,9 @@ table {
   gap: 0.5rem;
   margin: 0.75rem 0;
   padding: 0.75rem;
-  background: rgba(234, 179, 8, 0.05);
+  background: transparent;
   border-radius: var(--border-radius-md);
-  border: 1px solid rgba(234, 179, 8, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
 }
 
@@ -3968,6 +4150,7 @@ table {
   }
 }
 
+/* 16px min avoids iOS zoom on focus (WCAG / Apple HIG) */
 .waitlist-input {
   width: 100%;
   padding: 1rem 1.5rem;
@@ -3975,12 +4158,14 @@ table {
   border: 2px solid rgba(37, 99, 235, 0.3);
   border-radius: var(--border-radius-full);
   color: var(--color-text-primary);
-  font-size: clamp(1rem, 2vw, 1.1rem);
+  font-size: max(16px, clamp(1rem, 2vw, 1.1rem));
   font-weight: 400;
   outline: none;
   transition: all var(--transition-base);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .waitlist-input::placeholder {
@@ -4006,6 +4191,14 @@ table {
 .waitlist-input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.waitlist-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.35rem;
 }
 
 .waitlist-input-wrapper {
@@ -4181,6 +4374,49 @@ table {
   margin: 0;
 }
 
+.terms-content {
+  max-width: 52em;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  line-height: 1.65;
+}
+
+.terms-content h2 {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.terms-content h3 {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.terms-content p {
+  margin: 0 0 1rem;
+}
+
+.terms-content ul,
+.terms-content ol {
+  margin: 0 0 1rem 1.5rem;
+  padding: 0;
+}
+
+.terms-content li {
+  margin-bottom: 0.35rem;
+}
+
+.terms-content strong,
+.terms-content b {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
 .footer-content {
   display: flex;
   flex-direction: column;
@@ -4257,6 +4493,10 @@ table {
 .footer-link:focus {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+.partner-portal-link {
+  display: none;
 }
 
 /* Partner Sign-In Page */
@@ -4383,10 +4623,12 @@ table {
   border: 2px solid rgba(37, 99, 235, 0.2);
   border-radius: var(--border-radius-md);
   color: var(--color-text-primary);
-  font-size: var(--font-size-base);
+  font-size: max(16px, var(--font-size-base));
   font-weight: 400;
   transition: all var(--transition-base);
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .partner-input::placeholder {

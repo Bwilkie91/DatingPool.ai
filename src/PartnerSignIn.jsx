@@ -232,7 +232,7 @@ const PartnerSignIn = () => {
       <footer className="partner-footer">
         <div className="container">
           <p className="partner-footer-text">
-            Need help? <Link to="/partner/contact" className="partner-link">Contact support</Link>
+            Need help? <Link to="/contact" className="partner-link">Contact support</Link>
           </p>
         </div>
       </footer>

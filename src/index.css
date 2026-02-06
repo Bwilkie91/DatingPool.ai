@@ -11,3 +11,65 @@ code {
     monospace;
 }
 
+/* Error boundary — always visible when React throws (App.css may not be loaded) */
+.error-boundary {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: #0f172a;
+  color: #f8fafc;
+  box-sizing: border-box;
+}
+
+.error-boundary-content {
+  max-width: 28rem;
+  text-align: center;
+}
+
+.error-boundary-content h1 {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.error-boundary-content p {
+  color: #94a3b8;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.error-reset-button {
+  display: inline-block;
+  margin: 0 0.5rem 0.5rem 0;
+  padding: 0.75rem 1.25rem;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.error-reset-button:hover {
+  background: #1d4ed8;
+}
+
+.error-details {
+  margin-top: 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.error-details pre {
+  overflow: auto;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+

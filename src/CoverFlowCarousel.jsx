@@ -34,22 +34,39 @@ function trackOffsetForIndex(index, count, { STEP, CARD_WIDTH, CARD_OVERLAP }) {
   return index * STEP + CARD_WIDTH / 2 - CARD_OVERLAP / 2
 }
 
+const NARROW_BREAKPOINT = 768
+
 function useWindowWidth() {
   const [width, setWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 1024
   )
   useEffect(() => {
-    const onResize = () => setWidth(window.innerWidth)
+    let t
+    const onResize = () => {
+      if (t) clearTimeout(t)
+      t = setTimeout(() => setWidth(window.innerWidth), 120)
+    }
     window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      if (t) clearTimeout(t)
+    }
   }, [])
   return width
 }
 
-export function CoverFlowCarousel({ children, activeIndex, setActiveIndex }) {
+/* On narrow/touch: flat 2D stack + quicker spring to reduce GPU cost and jank */
+const FLAT_SPRING = { type: 'spring', stiffness: 320, damping: 32 }
+
+export function CoverFlowCarousel({ children, activeIndex, setActiveIndex, ariaLabel = 'Feature carousel', slideLabel = 'feature' }) {
   const viewportWidth = useWindowWidth()
+  const isNarrow = viewportWidth <= NARROW_BREAKPOINT
   const constants = useMemo(() => getConstants(viewportWidth), [viewportWidth])
   const { CARD_WIDTH, CARD_OVERLAP, CARD_SPACING, STEP } = constants
+  const rotationDeg = isNarrow ? 0 : ROTATION_DEG
+  const centerScale = isNarrow ? 1.02 : CENTER_SCALE
+  const sideScale = isNarrow ? 0.94 : SIDE_SCALE
+  const transition = isNarrow ? FLAT_SPRING : SPRING
 
   const cards = React.Children.toArray(children)
   const count = cards.length
@@ -67,11 +84,11 @@ export function CoverFlowCarousel({ children, activeIndex, setActiveIndex }) {
   useEffect(() => {
     const target = trackOffsetForIndex(activeIndex, count, constants)
     if (!isDragging.current) {
-      animate(baseOffsetMotion, target, SPRING)
+      animate(baseOffsetMotion, target, transition)
     } else {
       baseOffsetMotion.set(target)
     }
-  }, [activeIndex, count, baseOffsetMotion, constants])
+  }, [activeIndex, count, baseOffsetMotion, constants, transition])
 
   const goToIndex = useCallback(
     (index) => {
@@ -177,14 +194,14 @@ export function CoverFlowCarousel({ children, activeIndex, setActiveIndex }) {
       className="cover-flow cover-flow-ipod"
       role="region"
       aria-roledescription="carousel"
-      aria-label="Feature carousel"
+      aria-label={ariaLabel}
     >
       <button
         type="button"
         className="cover-flow-nav cover-flow-prev"
         onClick={(e) => { e.stopPropagation(); goPrev(); }}
         onPointerDown={(e) => e.stopPropagation()}
-        aria-label="Previous feature"
+        aria-label={`Previous ${slideLabel}`}
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M15 18l-6-6 6-6" />
@@ -222,8 +239,8 @@ export function CoverFlowCarousel({ children, activeIndex, setActiveIndex }) {
             const offset = i - activeIndex
             const isCenter = offset === 0
             const isRightEdge = offset >= 2
-            const scale = isCenter ? CENTER_SCALE : SIDE_SCALE
-            const rotateY = -offset * ROTATION_DEG
+            const scale = isCenter ? centerScale : sideScale
+            const rotateY = -offset * rotationDeg
             const translateZ = isCenter ? 48 : -Math.abs(offset) * 60
 
             return (
@@ -240,11 +257,11 @@ export function CoverFlowCarousel({ children, activeIndex, setActiveIndex }) {
                   visibility: isRightEdge ? 'hidden' : 'visible',
                   pointerEvents: isRightEdge ? 'none' : undefined,
                 }}
-                transition={SPRING}
+                transition={transition}
                 onClick={() => !isCenter && goToIndex(i)}
                 role="button"
                 tabIndex={isCenter ? 0 : -1}
-                aria-label={isCenter ? undefined : `Go to feature ${i + 1} of ${count}`}
+                aria-label={isCenter ? undefined : `Go to ${slideLabel} ${i + 1} of ${count}`}
                 aria-current={isCenter ? 'true' : undefined}
               >
                 <div className="cover-flow-card cover-flow-card-reflect">
@@ -262,7 +279,7 @@ export function CoverFlowCarousel({ children, activeIndex, setActiveIndex }) {
         className="cover-flow-nav cover-flow-next"
         onClick={(e) => { e.stopPropagation(); goNext(); }}
         onPointerDown={(e) => e.stopPropagation()}
-        aria-label="Next feature"
+        aria-label={`Next ${slideLabel}`}
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M9 18l6-6-6-6" />
@@ -272,7 +289,7 @@ export function CoverFlowCarousel({ children, activeIndex, setActiveIndex }) {
       <div
         className="cover-flow-dots"
         role="tablist"
-        aria-label="Feature slides"
+        aria-label={`${slideLabel} slides`}
       >
         {cards.map((_, i) => (
           <button
@@ -280,7 +297,7 @@ export function CoverFlowCarousel({ children, activeIndex, setActiveIndex }) {
             type="button"
             role="tab"
             aria-selected={i === activeIndex}
-            aria-label={`Go to feature ${i + 1} of ${count}`}
+            aria-label={`Go to ${slideLabel} ${i + 1} of ${count}`}
             className={`cover-flow-dot ${i === activeIndex ? 'active' : ''}`}
             onClick={(e) => { e.stopPropagation(); goToIndex(i); }}
             onPointerDown={(e) => e.stopPropagation()}

@@ -51,6 +51,7 @@ function App() {
   const [openFolder, setOpenFolder] = useState(null)
   const [currentEventIndex, setCurrentEventIndex] = useState(0)
   const [featureCardIndex, setFeatureCardIndex] = useState(0)
+  const [journeyCardIndex, setJourneyCardIndex] = useState(0)
   const [featuresVideoReady, setFeaturesVideoReady] = useState(false)
   const [heroPhase, setHeroPhase] = useState('home')
   const [heroCarouselIndex, setHeroCarouselIndex] = useState(0)
@@ -63,6 +64,25 @@ function App() {
   const heroSecondVideoTimerRef = useRef(null)
 
   const prefersReducedMotion = useReducedMotion()
+  const [isNarrow, setIsNarrow] = useState(
+    typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+  )
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)')
+    const update = () => setIsNarrow(window.innerWidth <= 768)
+    update()
+    mq.addEventListener('change', update)
+    window.addEventListener('resize', update)
+    return () => {
+      mq.removeEventListener('change', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [])
+  const reduceCardMotion = prefersReducedMotion || isNarrow
+  const cardMotionProps = useMemo(
+    () => (reduceCardMotion ? {} : { whileHover: { scale: 1.02, y: -2 }, whileTap: { scale: 0.99 } }),
+    [reduceCardMotion]
+  )
 
   const { ref: featuresSectionRef, inView: featuresInView } = useInView({
     threshold: 0.1,
@@ -93,25 +113,25 @@ function App() {
     'the Chicago Architecture Boat Tour'
   ]
 
-  // Event-themed meeting phrases (witty, no "we met at")
+  // Event-themed meeting phrases — romantic, flirty, witty (no "we met at")
   const getEventMeetingPhrase = (eventType) => {
     const phrases = {
-      'the 312 Comedy Festival': 'Laughing so hard we almost missed the next act at the 312 Comedy Festival',
-      'Lollapalooza': 'Dancing like no one was watching (but everyone was) at Lollapalooza',
-      'a Cubs game at Wrigley Field': 'Cheering so loud we lost our voices at Wrigley Field',
+      'the 312 Comedy Festival': 'Couldn\'t stop laughing—at the acts and at each other',
+      'Lollapalooza': 'Dancing like nobody was watching. (Everybody was. We didn\'t care.)',
+      'a Cubs game at Wrigley Field': 'We came for the game. Stayed for the seventh-inning stretch—and each other.',
       'a Bulls game at the United Center': 'Courtside seats, but we only had eyes for each other',
-      'the Chicago Marathon': 'Crossing the finish line together, holding hands the whole way',
-      'the Taste of Chicago': 'Sharing our favorite bites and discovering we had the same taste',
-      'the Chicago Jazz Festival': 'Swaying to the music, lost in the moment and each other',
-      'the Art Institute of Chicago': 'Getting lost in the galleries and finding each other',
-      'the Chicago Blues Festival': 'Feeling the blues (but in a good way, we promise)',
-      'a White Sox game': 'Rooting for the Sox, but really rooting for each other',
-      'the Chicago Air and Water Show': 'Watching planes do tricks while we did our own',
-      'the Chicago Food Truck Festival': 'Trying every food truck until we couldn\'t move',
-      'the Chicago Beer Festival': 'Cheers-ing so much we lost count at the Chicago Beer Festival',
-      'the Chicago Film Festival': 'Debating the plot twist for hours after the premiere',
-      'the Chicago Auto Show': 'Test driving cars and our chemistry at the Chicago Auto Show',
-      'the Chicago Architecture Boat Tour': 'Falling for the skyline (and accidentally for each other)'
+      'the Chicago Marathon': 'Crossed the finish line together. Started something we\'re still running with.',
+      'the Taste of Chicago': 'Shared every bite. Realized we had the same taste in food—and in people.',
+      'the Chicago Jazz Festival': 'Swaying to the same song, lost in the crowd and in each other',
+      'the Art Institute of Chicago': 'Got lost in the galleries. Found each other in the Impressionists.',
+      'the Chicago Blues Festival': 'Feeling the blues in the best way—slow, close, and a little bit sweet',
+      'a White Sox game': 'Rooting for the Sox. Secretly rooting for the night to never end.',
+      'the Chicago Air and Water Show': 'Watched the sky. Then couldn\'t look away from each other.',
+      'the Chicago Food Truck Festival': 'Ate our way through the trucks. Saved the best for last—us.',
+      'the Chicago Beer Festival': 'Raised a glass to good beer. Then to good timing.',
+      'the Chicago Film Festival': 'Debated the ending for hours. Ours was just getting started.',
+      'the Chicago Auto Show': 'Came for the cars. Left talking about the ride home—together.',
+      'the Chicago Architecture Boat Tour': 'Fell for the skyline. Then for the person next to me.'
     }
     return phrases[eventType] || eventType
   }
@@ -120,7 +140,7 @@ function App() {
   const heroRef = useRef(null)
   const heroPendingTransitionRef = useRef(null)
   const featureCardsRef = useRef([])
-  const journeyStepsRef = useRef([])
+  const journeySectionRef = useRef(null)
   const differentiatorsRef = useRef([])
   const observerRef = useRef(null)
   const mobileMenuRef = useRef(null)
@@ -495,7 +515,7 @@ function App() {
     // Observe refs (feature cards are in Cover Flow carousel, not observed)
     const allRefs = [
       ...featureCardsRef.current,
-      ...journeyStepsRef.current,
+      journeySectionRef.current,
     ].filter(Boolean)
 
     if (observer) {
@@ -828,7 +848,7 @@ function App() {
           </div>
         </section>
 
-        <section id="journey" className="journey" aria-label="How it works">
+        <section id="journey" className="journey" aria-label="How it works" ref={journeySectionRef}>
           <div className="journey-video-wrap" aria-hidden="true">
             <video
               className="journey-video"
@@ -848,124 +868,85 @@ function App() {
             <p className="section-intro animate-on-scroll">
               No more swiping into the void. We've built a platform where every match has a built-in plan. Here's how it works:
             </p>
-            <div className="journey-steps" role="list">
-              <motion.article 
-                className="journey-step interactive-card" 
-                ref={(el) => (journeyStepsRef.current[0] = el)}
-                style={mouseParallaxStyle}
-                role="listitem"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                whileHover={{ scale: 1.02, y: -5 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="step-header">
-                  <div className="step-visual">
-                    <div className="step-number" aria-hidden="true">1</div>
+            <CoverFlowCarousel
+              activeIndex={journeyCardIndex}
+              setActiveIndex={setJourneyCardIndex}
+              ariaLabel="How it works steps"
+              slideLabel="step"
+            >
+              <motion.article className="journey-card differentiator-card interactive-card" role="listitem" data-step="1" {...cardMotionProps}>
+                <div className="card-top">
+                  <div className="feature-icon-wrapper">
+                    <div className="diff-icon" aria-hidden="true"><Icon name="bot" className="diff-icon-svg" /></div>
                   </div>
-                  <div className="step-icon" aria-hidden="true"><Icon name="bot" className="step-icon-svg" /></div>
+                  <div className="stat-badge stat-badge-blue">Step 1</div>
                 </div>
-                <div className="step-content">
+                <div className="card-content">
                   <h3>AI-Powered Discovery</h3>
                   <p>
-                    Our AI learns your interests and shows you events you'll love. Browse events and optionally purchase tickets all in one place. Every interaction makes your recommendations smarter.
+                    Tell us what you're into. We'll surface events you'll actually want to go to—and optionally grab tickets before the FOMO hits.
                   </p>
                   <div className="step-you-get">
                     <strong>You Get:</strong>
-                    <span>A personalized event feed with optional ticket purchasing that gets smarter with every use</span>
+                    <span>A feed that gets smarter the more you use it. No more "there's nothing to do."</span>
                   </div>
                 </div>
               </motion.article>
-              <motion.article 
-                className="journey-step interactive-card" 
-                ref={(el) => (journeyStepsRef.current[1] = el)}
-                style={mouseParallaxStyle}
-                role="listitem"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                whileHover={{ scale: 1.02, y: -5 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="step-header">
-                  <div className="step-visual">
-                    <div className="step-number" aria-hidden="true">2</div>
+              <motion.article className="journey-card differentiator-card interactive-card" role="listitem" data-step="2" {...cardMotionProps}>
+                <div className="card-top">
+                  <div className="feature-icon-wrapper">
+                    <div className="diff-icon" aria-hidden="true"><Icon name="waves" className="diff-icon-svg" /></div>
                   </div>
-                  <div className="step-icon" aria-hidden="true"><Icon name="waves" className="step-icon-svg" /></div>
+                  <div className="stat-badge stat-badge-blue">Step 2</div>
                 </div>
-                <div className="step-content">
+                <div className="card-content">
                   <h3>Join the Pool</h3>
                   <p>
-                    Commit to an event—no ticket purchase required. Joining a pool filters for people serious about meeting up and signals your intent.
+                    See an event you like? Join the pool. No ticket required—just the intent to show up. Everyone in the pool is actually going.
                   </p>
                   <div className="step-you-get">
                     <strong>You Get:</strong>
-                    <span>Meet people at the same event, while helping our AI target better future events for you</span>
+                    <span>People who said "I'm in" instead of "maybe." Way better odds.</span>
                   </div>
                 </div>
               </motion.article>
-              <motion.article 
-                className="journey-step interactive-card" 
-                ref={(el) => (journeyStepsRef.current[2] = el)}
-                style={mouseParallaxStyle}
-                role="listitem"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                whileHover={{ scale: 1.02, y: -5 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="step-header">
-                  <div className="step-visual">
-                    <div className="step-number" aria-hidden="true">3</div>
+              <motion.article className="journey-card differentiator-card interactive-card" role="listitem" data-step="3" {...cardMotionProps}>
+                <div className="card-top">
+                  <div className="feature-icon-wrapper">
+                    <div className="diff-icon" aria-hidden="true"><Icon name="target" className="diff-icon-svg" /></div>
                   </div>
-                  <div className="step-icon" aria-hidden="true"><Icon name="target" className="step-icon-svg" /></div>
+                  <div className="stat-badge stat-badge-blue">Step 3</div>
                 </div>
-                <div className="step-content">
+                <div className="card-content">
                   <h3>AI Matching</h3>
                   <p>
-                    Our AI finds the best matches in each event pool using insights from thousands of successful connections.
+                    We match you with people in your pool who fit—so you're not just swiping into the void. Real compatibility, same event.
                   </p>
                   <div className="step-you-get">
                     <strong>You Get:</strong>
-                    <span>Compatible matches for every event, powered by real connection data</span>
+                    <span>Dates who are already going where you're going. The icebreaker writes itself.</span>
                   </div>
                 </div>
               </motion.article>
-              <motion.article 
-                className="journey-step journey-step-last interactive-card" 
-                ref={(el) => (journeyStepsRef.current[3] = el)}
-                style={mouseParallaxStyle}
-                role="listitem"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                whileHover={{ scale: 1.02, y: -5 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="step-header">
-                  <div className="step-visual">
-                    <div className="step-number" aria-hidden="true">4</div>
+              <motion.article className="journey-card differentiator-card interactive-card" role="listitem" data-step="4" {...cardMotionProps}>
+                <div className="card-top">
+                  <div className="feature-icon-wrapper">
+                    <div className="diff-icon" aria-hidden="true"><Icon name="message" className="diff-icon-svg" /></div>
                   </div>
-                  <div className="step-icon" aria-hidden="true"><Icon name="message" className="step-icon-svg" /></div>
+                  <div className="stat-badge stat-badge-blue">Step 4</div>
                 </div>
-                <div className="step-content">
+                <div className="card-content">
                   <h3>Organized Conversations</h3>
                   <p>
-                    Chats are organized by event. No "what should we do?" The plan is built in.
+                    Chats live under the event. No "what should we do?"—you're already going to the same thing. Just pick a spot and show up.
                   </p>
                   <div className="step-you-get">
                     <strong>You Get:</strong>
-                    <span>Clear conversations that lead to real meetups</span>
+                    <span>Conversations that turn into real meetups. Imagine that.</span>
                   </div>
                 </div>
               </motion.article>
-            </div>
+            </CoverFlowCarousel>
           </div>
         </section>
 
@@ -1061,9 +1042,6 @@ function App() {
                   real connections over endless scrolling, quality over quantity, and getting you off your phone and into real life.
                 </p>
               </div>
-              <div className="mission-location animate-on-scroll">
-                <p>DatingPool is proudly headquartered in Austin, TX</p>
-              </div>
             </div>
           </div>
         </section>
@@ -1084,48 +1062,37 @@ function App() {
           </div>
           <div className="container differentiators-content">
             <div className="features-header">
-              <div className="section-badge animate-on-scroll">Why DatingPool Actually Works</div>
+              <div className="section-badge animate-on-scroll">Why DatingPool Works</div>
               <h2 className="section-title animate-on-scroll">
-                Old Dating Apps Are Broken. We're Built for the Next Generation.
+                Dating that leads somewhere.
               </h2>
               <div className="problem-solution animate-on-scroll">
                 <div className="problem-box">
-                  <h3 className="problem-title">The Old Way <Icon name="xCircle" className="icon-inline" /></h3>
+                  <h3 className="problem-title">The old way <Icon name="xCircle" className="icon-inline" /></h3>
                   <ul className="problem-list">
-                    <li>Too many matches that go nowhere</li>
-                    <li>Too many "where should we meet?" conversations that fizzle out</li>
-                    <li>Too much time wasted</li>
+                    <li>Matches that go nowhere</li>
+                    <li>"Where should we meet?" on repeat</li>
+                    <li>Time wasted</li>
                   </ul>
                 </div>
                 <div className="solution-box">
-                  <h3 className="solution-title">The DatingPool Way <Icon name="checkCircle" className="icon-inline" /></h3>
-                  <p className="solution-lead">
-                    Find someone to go with.
-                  </p>
-                  <p className="solution-description">
-                    The best dates happen at events you want to attend. No ghosting when there's a concert to go to.
-                  </p>
+                  <h3 className="solution-title">The DatingPool way <Icon name="checkCircle" className="icon-inline" /></h3>
+                  <p className="solution-lead">Find someone to go with.</p>
+                  <p className="solution-description">Best dates happen at events you already want to attend.</p>
                   <div className="solution-benefits">
-                    <span className="benefit-tag">Lower Pressure</span>
-                    <span className="benefit-tag">Higher Success Rate</span>
+                    <span className="benefit-tag">Lower pressure</span>
+                    <span className="benefit-tag">Higher success rate</span>
                   </div>
                 </div>
               </div>
-              <div className="platform-vision animate-on-scroll">
-                <p className="vision-text">
-                  We connect <strong>event discovery</strong>, <strong>optional ticket purchasing</strong>, and <strong>dating</strong> in one seamless experience. 
-                  Find events, optionally buy tickets, and connect with people—all in one place. Every interaction makes the platform smarter, 
-                  giving you better matches and events over time. <strong>That's the future of dating.</strong>
-                </p>
-              </div>
+              <p className="features-carousel-intro animate-on-scroll">Swipe to see what makes us different.</p>
             </div>
             <CoverFlowCarousel activeIndex={featureCardIndex} setActiveIndex={setFeatureCardIndex}>
               <motion.article 
                 className="differentiator-card feature-card-featured interactive-card" 
                 role="listitem"
                 data-feature="planning"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.99 }}
+                {...cardMotionProps}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
@@ -1134,26 +1101,21 @@ function App() {
                   <div className="stat-badge stat-badge-success">0 Planning Friction</div>
                 </div>
                 <div className="card-content">
-                  <h3>Solves "What Next?"</h3>
+                  <h3>No more "where should we meet?"</h3>
                   <div className="visual-timeline">
                     <div className="timeline-item">
                       <span className="timeline-icon"><Icon name="calendar" className="timeline-icon-svg" /></span>
-                      <span>Find Event</span>
+                      <span>Find event</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
                       <span className="timeline-icon"><Icon name="waves" className="timeline-icon-svg" /></span>
-                      <span>Join Pool</span>
+                      <span>Join pool</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
                       <span className="timeline-icon"><Icon name="mapPin" className="timeline-icon-svg" /></span>
-                      <span>Venue</span>
-                    </div>
-                    <div className="timeline-arrow">→</div>
-                    <div className="timeline-item">
-                      <span className="timeline-icon"><Icon name="clock" className="timeline-icon-svg" /></span>
-                      <span>Time</span>
+                      <span>Venue + time set</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
@@ -1161,19 +1123,14 @@ function App() {
                       <span>Meet</span>
                     </div>
                   </div>
-                  <p>
-                    Tired of the endless "where should we meet?" back-and-forth? We've got you covered. Find events and join the pool—no ticket purchase required. 
-                    Optionally purchase tickets if you want. The event is the date. The venue and time are set. 
-                    Just pick a spot to meet up and you're ready to go.
-                  </p>
+                  <p>Find events, join the pool (no ticket required), and show up. The event is the date.</p>
                 </div>
               </motion.article>
               <motion.article 
                 className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="matching"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.99 }}
+                {...cardMotionProps}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
@@ -1182,30 +1139,26 @@ function App() {
                   <div className="stat-badge stat-badge-blue">100% Built-in Icebreakers</div>
                 </div>
                 <div className="card-content">
-                  <h3>Context-Driven Matching</h3>
+                  <h3>Built-in icebreakers</h3>
                   <div className="visual-comparison">
                     <div className="comparison-bad">
-                      <span className="comparison-label">Traditional</span>
+                      <span className="comparison-label">Elsewhere</span>
                       <span className="comparison-text">"Hey"</span>
                     </div>
                     <div className="comparison-arrow-small">→</div>
                     <div className="comparison-good">
-                      <span className="comparison-label">DatingPool</span>
+                      <span className="comparison-label">Here</span>
                       <span className="comparison-text">"See you at the concert?"</span>
                     </div>
                   </div>
-                  <p>
-                    Every match comes with a built-in conversation starter. Instead of "hey," try "Are you excited for 
-                    the headliner?" or "Which food truck are you hitting first?" Real conversations start with real interests.
-                  </p>
+                  <p>Every match shares an event. Real conversation starters, not openers from nowhere.</p>
                 </div>
               </motion.article>
               <motion.article 
                 className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="intent"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.99 }}
+                {...cardMotionProps}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
@@ -1214,26 +1167,22 @@ function App() {
                   <div className="stat-badge stat-badge-orange">3x Higher Intent</div>
                 </div>
                 <div className="card-content">
-                  <h3>High-Intent Connections</h3>
+                  <h3>People who show up</h3>
                   <div className="intent-meter">
-                    <div className="meter-label">Commitment Level</div>
+                    <div className="meter-label">Intent</div>
                     <div className="meter-bar">
                       <div className="meter-fill" style={{ width: '95%' }}></div>
                     </div>
-                    <div className="meter-value">95% Committed</div>
+                    <div className="meter-value">95% committed to the event</div>
                   </div>
-                  <p>
-                    By joining an event pool, people are showing real intent. No more matching with serial swipers who never 
-                    respond. Everyone in your pool has already committed to showing up. That's commitment you can count on.
-                  </p>
+                  <p>Joining a pool means intent. No serial swipers—everyone's planning to be there.</p>
                 </div>
               </motion.article>
               <motion.article 
                 className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="organization"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.99 }}
+                {...cardMotionProps}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
@@ -1379,19 +1328,14 @@ function App() {
                       </div>
                     )}
                   </div>
-                  <p>
-                    Your inbox is organized like a pro. All your conversations for Pizza Making Workshop are grouped together. 
-                    All your 3Run2 Running Club matches are in their own folder. No more scrolling through endless chats trying 
-                    to remember who's who or which event they're for.
-                  </p>
+                  <p>Chats live under the event. One folder per event—no more "who was that?" scrolling.</p>
                 </div>
               </motion.article>
               <motion.article 
                 className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="verification"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.99 }}
+                {...cardMotionProps}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
@@ -1400,7 +1344,7 @@ function App() {
                   <div className="stat-badge stat-badge-green">100% Verified Profiles</div>
                 </div>
                 <div className="card-content">
-                  <h3>Verified & Safe</h3>
+                  <h3>Verified & safe</h3>
                   <div className="verification-steps">
                     <div className="verification-step">
                       <span className="step-check"><Icon name="check" className="step-check-svg" /></span>
@@ -1408,25 +1352,21 @@ function App() {
                     </div>
                     <div className="verification-step">
                       <span className="step-check"><Icon name="check" className="step-check-svg" /></span>
-                      <span>No fraud</span>
+                      <span>No bots, no catfishing</span>
                     </div>
                     <div className="verification-step">
                       <span className="step-check"><Icon name="check" className="step-check-svg" /></span>
                       <span>Quality over quantity</span>
                     </div>
                   </div>
-                  <p>
-                    Every profile is verified through real-world events. No fake accounts, no catfishing, no bots. 
-                    We're building a community of people doing things they love. Quality connections, not quantity matches.
-                  </p>
+                  <p>Profiles tied to real events. Real people, real plans.</p>
                 </div>
               </motion.article>
               <motion.article 
                 className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="squading"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.99 }}
+                {...cardMotionProps}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
@@ -1452,18 +1392,14 @@ function App() {
                       <span>Event Together</span>
                     </div>
                   </div>
-                  <p>
-                    Going solo not your thing? No problem. Bring your friends and match with other groups at the event. 
-                    Lower pressure, more fun, and you've got your crew for backup. <strong>Plus, get discounted group tickets when you squad up!</strong>
-                  </p>
+                  <p>Bring friends, match with other groups. Lower pressure, more fun—and group ticket discounts.</p>
                 </div>
               </motion.article>
               <motion.article 
                 className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="tickets"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.99 }}
+                {...cardMotionProps}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
@@ -1472,7 +1408,7 @@ function App() {
                   <div className="stat-badge stat-badge-blue">Integrated Tickets</div>
                 </div>
                 <div className="card-content">
-                  <h3>Find & Purchase Tickets</h3>
+                  <h3>Tickets in one place</h3>
                   <div className="visual-timeline">
                     <div className="timeline-item">
                       <span className="timeline-icon"><Icon name="search" className="timeline-icon-svg" /></span>
@@ -1481,26 +1417,22 @@ function App() {
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
                       <span className="timeline-icon"><Icon name="waves" className="timeline-icon-svg" /></span>
-                      <span>Join Pool</span>
+                      <span>Join pool</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
                       <span className="timeline-icon"><Icon name="ticket" className="timeline-icon-svg" /></span>
-                      <span>Optional Tickets</span>
+                      <span>Optional tickets</span>
                     </div>
                   </div>
-                  <p>
-                    No need to switch between apps. Browse events and join the dating pool—ticket purchase is optional. 
-                    Everything's seamlessly integrated. Purchase tickets if you want, or just join the pool to connect with others going to the same event.
-                  </p>
+                  <p>Discover, join the pool, and buy tickets if you want—all in one app.</p>
                 </div>
               </motion.article>
               <motion.article 
                 className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="privacy"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.99 }}
+                {...cardMotionProps}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
@@ -1509,7 +1441,7 @@ function App() {
                   <div className="stat-badge stat-badge-purple">Privacy Protected</div>
                 </div>
                 <div className="card-content">
-                  <h3>Blocked User Detection</h3>
+                  <h3>Blocked users can't see you</h3>
                   <div className="visual-comparison">
                     <div className="comparison-bad">
                       <span className="comparison-label">You</span>
@@ -1521,19 +1453,14 @@ function App() {
                       <span className="comparison-text"><Icon name="eye" className="icon-inline" /> Can't see you</span>
                     </div>
                   </div>
-                  <p>
-                    We've got your back. If someone you've blocked joins the same event pool, you'll get a private notification. 
-                    They won't know you're there, and you can choose to avoid that event or stay in the pool with full privacy. 
-                    <strong>Your safety and comfort come first—no awkward encounters, no bad experiences.</strong>
-                  </p>
+                  <p>If someone you've blocked is in the same pool, you're notified. They never see you. Your call whether to stay or skip the event.</p>
                 </div>
               </motion.article>
               <motion.article 
                 className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="waitlisting"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.99 }}
+                {...cardMotionProps}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
@@ -1542,41 +1469,36 @@ function App() {
                   <div className="stat-badge stat-badge-orange">Smart Matching</div>
                 </div>
                 <div className="card-content">
-                  <h3>Intelligent Waitlisting</h3>
+                  <h3>Waitlist until it's worth it</h3>
                   <div className="visual-timeline">
                     <div className="timeline-item">
                       <span className="timeline-icon"><Icon name="user" className="timeline-icon-svg" /></span>
-                      <span>Join Waitlist</span>
+                      <span>Join waitlist</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
                       <span className="timeline-icon"><Icon name="search" className="timeline-icon-svg" /></span>
-                      <span>AI Matches Criteria</span>
+                      <span>AI matches</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
                       <span className="timeline-icon">🎯</span>
-                      <span>Critical Mass</span>
+                      <span>Critical mass</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
                       <span className="timeline-icon"><Icon name="waves" className="timeline-icon-svg" /></span>
-                      <span>Pool Opens</span>
+                      <span>Pool opens</span>
                     </div>
                   </div>
-                  <p>
-                    Skip the empty pools. Our AI intelligently waitlists you until enough compatible matches join. 
-                    When your pool hits critical mass, it opens automatically—and you get <strong>quality matches from day one.</strong> 
-                    No more lackluster experiences. No wasted time.
-                  </p>
+                  <p>We waitlist until enough compatible people join. Then the pool opens—quality matches from day one.</p>
                 </div>
               </motion.article>
               <motion.article 
                 className="differentiator-card interactive-card" 
                 role="listitem"
                 data-feature="coordination"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.99 }}
+                {...cardMotionProps}
               >
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
@@ -1585,9 +1507,9 @@ function App() {
                   <div className="stat-badge stat-badge-blue">Event Day Tools</div>
                 </div>
                 <div className="card-content">
-                  <h3>Coordination Tools</h3>
+                  <h3>Event-day tools</h3>
                   <p className="coordination-push">
-                    <strong>When you both have tickets, everything unlocks</strong>—calls, video, photos, location & safety in one place.
+                    <strong>Once you both have tickets</strong>—chat, calls, location & safety unlock in one place.
                   </p>
                   <div className="visual-timeline coordination-timeline" aria-label="How tools unlock">
                     <div className="timeline-item">
@@ -1672,15 +1594,18 @@ function App() {
                 noValidate
               >
                 <div className="waitlist-input-wrapper">
+                  <label htmlFor="waitlist-email" className="waitlist-label">
+                    Email address
+                  </label>
                   <motion.input
+                    id="waitlist-email"
                     type="email"
-                    placeholder="Your email"
+                    placeholder="you@example.com"
                     value={email}
                     onChange={handleEmailChange}
                     onBlur={() => validateEmail(email)}
                     className={`waitlist-input ${emailError ? 'error' : ''} ${submitSuccess ? 'success' : ''}`}
                     required
-                    aria-label="Email address"
                     aria-invalid={!!emailError}
                     aria-describedby={emailError ? 'email-error' : submitSuccess ? 'submit-success' : undefined}
                     disabled={isSubmitting}
@@ -1701,8 +1626,7 @@ function App() {
                 <motion.button
                   type="submit"
                   className="waitlist-button"
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
+                  {...cardMotionProps}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   aria-label="Join the DatingPool waitlist"
                   disabled={isSubmitting || !!emailError}
@@ -1729,7 +1653,7 @@ function App() {
               <p>Real dates. Real people. Real places.</p>
             </div>
             <div className="footer-links">
-              <Link to="/partner" className="footer-link">
+              <Link to="/partner" className="footer-link partner-portal-link" aria-hidden="true">
                 Partner Portal
               </Link>
             </div>
