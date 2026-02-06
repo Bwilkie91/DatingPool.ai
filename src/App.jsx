@@ -150,6 +150,7 @@ function App() {
   const differentiatorsRef = useRef([])
   const observerRef = useRef(null)
   const mobileMenuRef = useRef(null)
+  const heroScrollHapticsFiredRef = useRef(new Set())
   const mobileMenuToggleRef = useRef(null)
   const waitlistFormRef = useRef(null)
 
@@ -250,15 +251,34 @@ function App() {
     const documentHeight = document.documentElement.scrollHeight
     const scrollableHeight = documentHeight - windowHeight
     const progress = scrollableHeight > 0 ? (currentScrollY / scrollableHeight) * 100 : 0
-    
+
     setScrollY(currentScrollY)
     setIsScrolled(currentScrollY > CONSTANTS.SCROLL_THRESHOLD)
     setScrollProgress(progress)
-    
+
+    // Mobile: haptic feedback as user scrolls through the first page (hero)
+    const isMobile = typeof navigator !== 'undefined' && navigator.vibrate && window.innerWidth <= 768
+    if (isMobile && !prefersReducedMotion) {
+      const fired = heroScrollHapticsFiredRef.current
+      if (currentScrollY < 40) {
+        fired.clear()
+      } else {
+        const thresholds = [0.25, 0.5, 0.75, 1].map((r) => Math.round(r * windowHeight))
+        thresholds.forEach((thresh) => {
+          if (currentScrollY >= thresh && !fired.has(thresh)) {
+            fired.add(thresh)
+            try {
+              navigator.vibrate(10)
+            } catch (_) {}
+          }
+        })
+      }
+    }
+
     // Determine active section based on scroll position
     const sections = ['journey', 'mission', 'features', 'coming-soon']
     const scrollPosition = currentScrollY + windowHeight / 3
-    
+
     for (let i = sections.length - 1; i >= 0; i--) {
       const section = document.getElementById(sections[i])
       if (section && section.offsetTop <= scrollPosition) {
@@ -266,7 +286,7 @@ function App() {
         break
       }
     }
-  }, [])
+  }, [prefersReducedMotion])
 
   // Mouse move handler with throttling
   const handleMouseMove = useCallback((e) => {
