@@ -196,18 +196,6 @@ export function CoverFlowCarousel({ children, activeIndex, setActiveIndex, ariaL
       aria-roledescription="carousel"
       aria-label={ariaLabel}
     >
-      <button
-        type="button"
-        className="cover-flow-nav cover-flow-prev"
-        onClick={(e) => { e.stopPropagation(); goPrev(); }}
-        onPointerDown={(e) => e.stopPropagation()}
-        aria-label={`Previous ${slideLabel}`}
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      </button>
-
       <div
         className="cover-flow-viewport"
         style={{
@@ -276,35 +264,47 @@ export function CoverFlowCarousel({ children, activeIndex, setActiveIndex, ariaL
         </div>
       </div>
 
-      <button
-        type="button"
-        className="cover-flow-nav cover-flow-next"
-        onClick={(e) => { e.stopPropagation(); goNext(); }}
-        onPointerDown={(e) => e.stopPropagation()}
-        aria-label={`Next ${slideLabel}`}
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M9 18l6-6-6-6" />
-        </svg>
-      </button>
-
-      <div
-        className="cover-flow-dots"
-        role="tablist"
-        aria-label={`${slideLabel} slides`}
-      >
-        {cards.map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            role="tab"
-            aria-selected={i === activeIndex}
-            aria-label={`Go to ${slideLabel} ${i + 1} of ${count}`}
-            className={`cover-flow-dot ${i === activeIndex ? 'active' : ''}`}
-            onClick={(e) => { e.stopPropagation(); goToIndex(i); }}
-            onPointerDown={(e) => e.stopPropagation()}
-          />
-        ))}
+      <div className="cover-flow-nav-wrap">
+        <button
+          type="button"
+          className="cover-flow-nav cover-flow-prev"
+          onClick={(e) => { e.stopPropagation(); goPrev(); }}
+          onPointerDown={(e) => e.stopPropagation()}
+          aria-label={`Previous ${slideLabel}`}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+        <div
+          className="cover-flow-dots"
+          role="tablist"
+          aria-label={`${slideLabel} slides`}
+        >
+          {cards.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              role="tab"
+              aria-selected={i === activeIndex}
+              aria-label={`Go to ${slideLabel} ${i + 1} of ${count}`}
+              className={`cover-flow-dot ${i === activeIndex ? 'active' : ''}`}
+              onClick={(e) => { e.stopPropagation(); goToIndex(i); }}
+              onPointerDown={(e) => e.stopPropagation()}
+            />
+          ))}
+        </div>
+        <button
+          type="button"
+          className="cover-flow-nav cover-flow-next"
+          onClick={(e) => { e.stopPropagation(); goNext(); }}
+          onPointerDown={(e) => e.stopPropagation()}
+          aria-label={`Next ${slideLabel}`}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </button>
       </div>
     </div>
   )

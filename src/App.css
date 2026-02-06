@@ -2958,11 +2958,47 @@ table {
   right: var(--space-4);
 }
 
+/* Nav wrap: chevrons each side of dots (same as hero) */
+.cover-flow-nav-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-8);
+  position: relative;
+  z-index: 30;
+  pointer-events: auto;
+}
+
+.cover-flow-nav-wrap .cover-flow-nav {
+  position: static;
+  top: auto;
+  transform: none;
+}
+
+.cover-flow-nav-wrap .cover-flow-nav:hover {
+  transform: scale(1.05);
+}
+
+.cover-flow-nav-wrap .cover-flow-nav:active {
+  transform: scale(0.98);
+}
+
+.cover-flow-nav-wrap .cover-flow-prev,
+.cover-flow-nav-wrap .cover-flow-next {
+  left: auto;
+  right: auto;
+}
+
+.cover-flow-nav-wrap .cover-flow-dots {
+  margin-top: 0;
+}
+
 .cover-flow-dots {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: var(--space-2);
-  margin-top: var(--space-8);
   flex-wrap: wrap;
   position: relative;
   z-index: 30;
@@ -3209,6 +3245,10 @@ table {
     min-height: 48px;
   }
 
+  .cover-flow-nav-wrap {
+    margin-top: var(--space-6);
+  }
+
   .cover-flow-prev {
     left: var(--space-1);
   }
@@ -3218,7 +3258,6 @@ table {
   }
 
   .cover-flow-dots {
-    margin-top: var(--space-6);
     gap: var(--space-2);
   }
 
