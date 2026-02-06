@@ -14,7 +14,7 @@ const pool5VideoSrc = new URL('../pool5.mp4', import.meta.url).href
 const homeVideoSrc = new URL('../home.mp4', import.meta.url).href
 
 const HERO_CAROUSEL_SOURCES = [pool5VideoSrc, pool3VideoSrc]
-const HERO_SECOND_VIDEO_MAX_MS = 13000
+const HERO_SECOND_VIDEO_MAX_MS = 11000
 
 /**
  * Main App Component
