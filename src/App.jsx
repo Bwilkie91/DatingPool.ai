@@ -1586,57 +1586,54 @@ function App() {
                 </div>
                 <div className="card-content">
                   <h3>Coordination Tools</h3>
-                  <div className="visual-timeline">
+                  <p className="coordination-push">
+                    <strong>When you both have tickets, everything unlocks</strong>—calls, video, photos, location & safety in one place.
+                  </p>
+                  <div className="visual-timeline coordination-timeline" aria-label="How tools unlock">
                     <div className="timeline-item">
-                      <span className="timeline-icon"><Icon name="message" className="timeline-icon-svg" /></span>
+                      <span className="timeline-icon" aria-hidden="true"><Icon name="message" className="timeline-icon-svg" /></span>
                       <span>Chat</span>
                     </div>
-                    <div className="timeline-arrow">→</div>
+                    <div className="timeline-arrow" aria-hidden="true">→</div>
                     <div className="timeline-item">
-                      <span className="timeline-icon"><Icon name="ticket" className="timeline-icon-svg" /></span>
-                      <span>Both Buy Tickets</span>
+                      <span className="timeline-icon" aria-hidden="true"><Icon name="ticket" className="timeline-icon-svg" /></span>
+                      <span>Buy Tickets</span>
                     </div>
-                    <div className="timeline-arrow">→</div>
+                    <div className="timeline-arrow" aria-hidden="true">→</div>
                     <div className="timeline-item">
-                      <span className="timeline-icon"><Icon name="calendar" className="timeline-icon-svg" /></span>
+                      <span className="timeline-icon" aria-hidden="true"><Icon name="calendar" className="timeline-icon-svg" /></span>
                       <span>Event Day</span>
                     </div>
-                    <div className="timeline-arrow">→</div>
+                    <div className="timeline-arrow" aria-hidden="true">→</div>
                     <div className="timeline-item">
-                      <span className="timeline-icon"><Icon name="unlock" className="timeline-icon-svg" /></span>
-                      <span>Tools Unlock</span>
+                      <span className="timeline-icon" aria-hidden="true"><Icon name="unlock" className="timeline-icon-svg" /></span>
+                      <span>Unlock</span>
                     </div>
                   </div>
                   <div className="coordination-tools-grid">
                     <div className="coordination-tool-item">
-                      <span className="tool-icon"><Icon name="phone" className="tool-icon-svg" /></span>
+                      <span className="tool-icon" aria-hidden="true"><Icon name="phone" className="tool-icon-svg" /></span>
                       <span className="tool-name">Calls</span>
                     </div>
                     <div className="coordination-tool-item">
-                      <span className="tool-icon"><Icon name="video" className="tool-icon-svg" /></span>
+                      <span className="tool-icon" aria-hidden="true"><Icon name="video" className="tool-icon-svg" /></span>
                       <span className="tool-name">Video</span>
                     </div>
                     <div className="coordination-tool-item">
-                      <span className="tool-icon"><Icon name="camera" className="tool-icon-svg" /></span>
+                      <span className="tool-icon" aria-hidden="true"><Icon name="camera" className="tool-icon-svg" /></span>
                       <span className="tool-name">Photos</span>
                     </div>
                     <div className="coordination-tool-item">
-                      <span className="tool-icon"><Icon name="mapPin" className="tool-icon-svg" /></span>
-                      <span className="tool-name">Location Sharing</span>
+                      <span className="tool-icon" aria-hidden="true"><Icon name="mapPin" className="tool-icon-svg" /></span>
+                      <span className="tool-name">Location</span>
                     </div>
                     <div className="coordination-tool-item">
-                      <span className="tool-icon"><Icon name="shield" className="tool-icon-svg" /></span>
-                      <span className="tool-name">Event Security</span>
+                      <span className="tool-icon" aria-hidden="true"><Icon name="shield" className="tool-icon-svg" /></span>
+                      <span className="tool-name">Safety</span>
                     </div>
                   </div>
-                  <p>
-                    When the event day arrives, unlock powerful coordination tools to make meeting up seamless. Make calls, 
-                    video chat, share photos, and share your location—all within the app. <strong>If both of you purchase tickets 
-                    in the chat, these features unlock instantly.</strong>
-                  </p>
-                  <p>
-                    Plus, access event security features like emergency contacts, safe meeting spots, and real-time safety check-ins. 
-                    No more "where are you?" texts. Just smooth coordination with built-in safety.
+                  <p className="coordination-note">
+                    Emergency contacts, safe meet-up spots, and real-time check-ins—no more &ldquo;where are you?&rdquo; texts.
                   </p>
                 </div>
               </motion.article>
@@ -1732,9 +1729,9 @@ function App() {
               <p>Real dates. Real people. Real places.</p>
             </div>
             <div className="footer-links">
-              <a href="/partner" className="footer-link">
+              <Link to="/partner" className="footer-link">
                 Partner Portal
-              </a>
+              </Link>
             </div>
             <div className="footer-copyright">
               <p>Copyright © 2025 DatingPool LLC. All rights reserved.</p>
