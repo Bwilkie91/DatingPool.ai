@@ -111,6 +111,12 @@ body {
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
   overscroll-behavior-y: auto; /* allow native overscroll; none can break trackpad on some browsers */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Allow swipe-to-scroll on home and full page (touch devices) */
+#main-content {
+  touch-action: pan-y;
 }
 
 /* Prevent overflow on all elements */
@@ -560,6 +566,7 @@ table {
   justify-content: center;
   isolation: isolate;
   box-sizing: border-box;
+  touch-action: pan-y; /* allow vertical swipe scroll on home */
 }
 
 .hero-video-wrap {
