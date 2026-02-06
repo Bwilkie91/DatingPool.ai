@@ -66,6 +66,41 @@ Scroll listener already used `{ passive: true }` and `requestAnimationFrame` thr
 
 ---
 
+## Status bar & dynamic viewport (Feb 2026)
+
+**Goal:** Reliable layout on iOS/Android when the status bar and browser UI show/hide on scroll; no content under the notch; no jump when the dynamic viewport changes.
+
+**Changes:**
+- **Scroll progress bar:** Positioned below the status bar with `top: var(--safe-top)` so the bar is never under the notch/status bar when scrolling.
+- **Loading screen:** Uses `min-height: 100dvh` / `height: 100dvh` (with `100vh` fallback) and `padding-top: var(--safe-top)` so it fills the dynamic viewport and content stays in the safe area.
+- **Full-height sections:** `.App`, hero, placeholder pages, partner sign-in, journey, CTA, mobile nav, and error boundary now use `100dvh` (with `100vh` fallback) where they use full viewport height, so iOS Safari’s collapsing toolbar doesn’t cause layout jumps.
+- **Header** was already using `padding-top: max(var(--safe-top), ...)` and safe left/right; no change.
+
+**Recommendation:** Keep `viewport-fit=cover` in `index.html` and use `env(safe-area-inset-*)` (or `--safe-*`) for any new fixed/sticky UI.
+
+---
+
+## Animations on iOS/Android (Feb 2026)
+
+**Guideline:** For 60fps on mobile, prefer animating only **transform** and **opacity** (compositor-only). Avoid animating `width`, `height`, `top`, `left`, `margin`, `padding` in hot paths (e.g. during scroll).
+
+**Current state:**
+- **Scroll progress bar:** Uses `transform: scaleX(progress)` (compositor-only). ✓
+- **Scroll-triggered keyframes:** `slide-up`, `slide-down`, `fade-in`, particle/ripple/glow keyframes use `transform` and/or `opacity`. ✓
+- **Transitions that affect layout:** Header uses `transition` on `padding` and `background` (on scroll class); mobile nav uses `transition: right`; a few UI elements use `transition: width` or `width/height`. These are not on the scroll path (they’re on class/open state changes), so acceptable. For new animations, prefer `transform`/`opacity` where possible.
+
+---
+
+## Scroll not working on MacBook / Android (Feb 2026)
+
+**Symptom:** Page scrolled on iOS but not on MacBook (trackpad/wheel) or Android (touch).
+
+**Cause:** (1) Setting `overflow-y: auto` on `html` and `body` made the body a scroll container; with `min-height: 100%` the body expanded with content so some browsers did not show a scrollbar or register wheel/touch as document scroll. (2) When the menu closed, JS set `document.body.style.overflow = 'auto'`, which kept body as the scroll container and could behave differently across Chrome/Safari/desktop.
+
+**Fix:** (1) **CSS:** Removed `overflow-y: auto` from `html` and `body`; use only `overflow-x: hidden` so the **viewport** scrolls the document (native behavior). Added `height: auto` and kept `min-height: 100%` so the document grows. (2) **JS:** When the menu is closed, set `document.body.style.overflow = ''` (clear inline) instead of `'auto'`, so no forced scroll container; when the menu is open, set `'hidden'` to lock. (3) Kept `touch-action: pan-y` on main and sections for touch devices; desktop wheel is unaffected.
+
+---
+
 ## Scroll lock fix (Feb 2026)
 
 **Issue:** Page scrolled initially on load then stopped (mouse wheel, trackpad, touch); no console errors.
@@ -94,7 +129,7 @@ Scroll listener already used `{ passive: true }` and `requestAnimationFrame` thr
 | Priority | Item | Action |
 |----------|------|--------|
 | High | **PWA / Add to Home Screen** | Add `manifest.webmanifest` (name, short_name, theme_color, icons 192/512). Link in `index.html`. |
-| High | **Dynamic viewport on mobile** | Use `100dvh` for full-height sections where appropriate (hero already uses `min-height: 100dvh` in places; audit other full-height blocks). |
+| ~~High~~ Done | **Dynamic viewport on mobile** | Applied Feb 2026: loading screen, .App, hero, placeholder/partner pages, journey, CTA, mobile nav, error boundary use `100dvh` with `100vh` fallback; scroll progress bar uses `top: var(--safe-top)`. |
 | Medium | **Orientation / resize** | Handle `orientationchange` and `resize` for hero/carousel so layout doesn’t jump on rotate. |
 | Medium | **Overscroll** | Consider `overscroll-behavior: none` on `body` to avoid pull-to-refresh/overscroll on hero. |
 | Low | **Haptic (future)** | When adding native or WebView features, consider light haptic on primary actions. |
@@ -133,8 +168,8 @@ Scroll listener already used `{ passive: true }` and `requestAnimationFrame` thr
 | Priority | Item | Action |
 |----------|------|--------|
 | High | **Hero video payload** | Multiple large MP4s (e.g. home, pool, pool2–5) drive most of the weight. Use CDN, compress (e.g. two-pass H.264), and consider poster images + lazy load below-the-fold videos. |
-| High | **Lazy load below-fold video** | Journey/CTA/pool videos: use `loading="lazy"` and/or Intersection Observer to load only when near viewport. |
-| High | **Bundle size** | Run `vite build --mode analyze` (or similar); trim unused deps (e.g. Lottie if unused), consider lazy-loading Framer Motion for below-fold. |
+| ~~High~~ Done | **Lazy load below-fold video** | Applied Feb 2026: Journey, Mission, CTA, Features videos use `useInView` (or equivalent) and `preload="none"`; only hero preloads. |
+| ~~High~~ Done | **Bundle size** | Applied Feb 2026: Removed unused Lottie; route-level lazy loading; manualChunks for vendor caching. |
 | Medium | **Caching** | Ensure GitHub Pages / CDN sends long-lived cache headers for hashed JS/CSS and static assets. |
 | Medium | **Core Web Vitals** | Measure LCP (hero video/image), INP/CLS (layout shifts from hero text/video). Target LCP <2.5s, CLS <0.1. |
 | Low | **Preload LCP asset** | If hero LCP is a single image or one video, add `<link rel="preload">` for it. |
@@ -150,9 +185,9 @@ Scroll listener already used `{ passive: true }` and `requestAnimationFrame` thr
 ### Gaps and improvements
 | Priority | Item | Action |
 |----------|------|--------|
-| High | **Open Graph** | Add `og:title`, `og:description`, `og:image`, `og:url`, `og:type` for link previews (Twitter/Facebook/LinkedIn). |
-| High | **Twitter Card** | Add `twitter:card`, `twitter:title`, `twitter:description`, `twitter:image`. |
-| Medium | **Canonical URL** | Set canonical to production URL (e.g. `https://bwilkie91.github.io/DatingPool.ai/` or custom domain). |
+| ~~High~~ Done | **Open Graph** | Applied Feb 2026: `og:title`, `og:description`, `og:image`, `og:url`, `og:type` in index.html (og:image uses vite.svg until dedicated asset). |
+| ~~High~~ Done | **Twitter Card** | Applied Feb 2026: `twitter:card`, `twitter:title`, `twitter:description`, `twitter:image`. |
+| ~~Medium~~ Done | **Canonical URL** | Applied Feb 2026: `<link rel="canonical">` to production URL in index.html. |
 | Medium | **Structured data** | Add JSON-LD (Organization, WebSite, maybe LocalBusiness if relevant) for rich results. |
 | Low | **Sitemap / robots** | Add `sitemap.xml` and `robots.txt` if you want indexing control. |
 
@@ -184,9 +219,31 @@ Scroll listener already used `{ passive: true }` and `requestAnimationFrame` thr
 ### Gaps and improvements
 | Priority | Item | Action |
 |----------|------|--------|
-| Medium | **Env and config** | Move public URLs (e.g. waitlist form) to env (e.g. `import.meta.env.VITE_WAITLIST_URL`) so they’re configurable per environment. |
+| ~~Medium~~ Done | **Env and config** | Applied Feb 2026: Waitlist URL from `VITE_WAITLIST_URL`; `.env.example` added. |
 | Medium | **Tests** | Add minimal E2E (e.g. Playwright) for: load home, hero plays, waitlist submit path; optional unit tests for hero state. |
 | Low | **Types** | Consider TypeScript or JSDoc for props and key functions to reduce regressions. |
+
+---
+
+## Enterprise behavior & build pass (Feb 2026)
+
+**Scope:** Stack (Vite 5, React 18, Framer Motion, React Router), functionality (hero, waitlist, videos, routes), and enterprise behaviors (config, resilience, performance, SEO).
+
+**Research:** (1) **Vite:** `manualChunks` splits vendor code for better caching; route-level `React.lazy` + `Suspense` reduces initial JS. (2) **Video:** Below-the-fold videos should use Intersection Observer and `preload="none"`; only hero should preload. (3) **Env:** `import.meta.env.VITE_*` for config; `import.meta.env.DEV` in Vite (not `process.env.NODE_ENV`) for conditional UI. (4) **SEO:** Canonical, `og:url`, `og:image` (and `twitter:image`) improve sharing and indexing.
+
+**Changes applied:**
+
+| Area | Change |
+|------|--------|
+| **Config** | Waitlist URL from `import.meta.env.VITE_WAITLIST_URL` with fallback; `.env.example` added. |
+| **Resilience** | ErrorBoundary uses `import.meta.env.DEV` for dev-only error details (Vite-compatible). |
+| **Video** | Mission and CTA section videos lazy-load: `useInView` + `src` only when in view, `preload="none"`. Journey and Features already lazy-load. |
+| **Code splitting** | Non-home routes lazy-loaded: PartnerSignIn, Contact, PrivacyPolicy, TermsOfService, PlaceholderLayout via `React.lazy()` and `<Suspense>` with a small loading fallback. |
+| **Build** | Vite `build.rollupOptions.output.manualChunks`: react, react-dom, framer-motion, router, intersection-observer; `target: 'es2020'`, hashed asset names. |
+| **Bundle** | Removed unused `lottie-react` dependency. |
+| **SEO** | `index.html`: canonical URL, `og:url`, `og:image` and `twitter:image` (vite.svg placeholder until dedicated OG image exists). |
+
+**Recommendations still open:** Replace `og:image`/twitter image with a dedicated 1200×630 asset when ready; add PWA manifest; consider CSP; run `npm audit` and E2E for critical paths.
 
 ---
 

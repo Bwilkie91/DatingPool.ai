@@ -80,12 +80,18 @@
   box-sizing: border-box;
 }
 
+/* ——— Enterprise scroll: viewport scrolls document (works MacBook, Android, iOS) ——— */
+/* Do NOT set overflow-y on html/body so the viewport is the scroll container. */
 html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-size: 16px;
+  overflow-x: hidden;
+  min-height: 100%;
+  height: auto;
+  overscroll-behavior-y: contain;
 }
 
 body {
@@ -95,30 +101,25 @@ body {
   font-weight: 400;
   letter-spacing: var(--letter-spacing-normal);
   color: var(--color-text-primary);
-}
-
-/* Prevent horizontal scroll; stable scroll container for iOS and all devices */
-html {
-  overflow-x: hidden;
-  overflow-y: scroll;
-  -webkit-overflow-scrolling: touch;
   min-height: 100%;
-}
-
-body {
-  min-height: 100%;
+  height: auto;
   max-width: 100vw;
   overflow-x: hidden;
-  overflow-y: scroll;
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
-  -webkit-overflow-scrolling: touch;
-  /* Reduce rubber-band jerk on iOS while keeping scroll flow */
-  overscroll-behavior-y: contain;
 }
 
-/* Allow swipe-to-scroll on home and full page (touch devices) */
+/* Only lock body scroll when menu is open (via inline style in JS). When closed, no overflow set = viewport scrolls. */
+
+/* Main content: touch devices get pan-y so vertical swipe scrolls; desktop wheel unaffected */
+.main-scroll-content,
 #main-content {
+  touch-action: pan-y;
+}
+
+/* Sections: layout containment only; do not create scroll contexts */
+.page-section {
+  contain: layout;
   touch-action: pan-y;
 }
 
@@ -135,12 +136,16 @@ table {
   word-wrap: break-word;
 }
 
-/* Loading Screen */
+/* Loading Screen — dvh + safe area for iOS/Android status bar */
 .loading-screen {
   position: fixed;
   inset: 0;
   width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
   height: 100%;
+  height: 100dvh;
+  padding-top: var(--safe-top);
   background: var(--color-bg-dark);
   display: flex;
   flex-direction: column;
@@ -210,6 +215,7 @@ table {
 
 .App {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--color-bg-dark);
@@ -1737,12 +1743,13 @@ table {
   font-style: italic;
 }
 
-/* Journey Section — video background (pool.mp4) */
+/* Journey Section — video background (pool.mp4); scroll/touch from .page-section */
 .journey {
   padding: var(--space-20) 0;
   position: relative;
   overflow: hidden;
   min-height: min(100vh, 900px);
+  min-height: min(100dvh, 900px);
 }
 
 .journey-video-wrap {
@@ -2331,7 +2338,7 @@ table {
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
-/* Differentiators Section — video background (pool2.mp4) */
+/* Differentiators Section — video background (pool2.mp4); scroll/touch from .page-section */
 .differentiators {
   padding: var(--space-20) 0;
   position: relative;
@@ -2462,6 +2469,15 @@ table {
   text-decoration: none;
 }
 
+/* Invisible container for carousel: clips overflow, isolates layout, allows page scroll */
+.carousel-invisible-container {
+  width: 100%;
+  overflow: hidden;
+  contain: layout style;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Cover Flow Carousel — redesigned: more space, fit-all copy, premium look */
 .cover-flow {
   position: relative;
@@ -2474,7 +2490,7 @@ table {
   justify-content: center;
 }
 
-/* Viewport: clean, no heavy vignette — enterprise simplicity */
+/* Viewport: clean, no heavy vignette — enterprise simplicity; pan-y so page scroll works */
 .cover-flow-ipod .cover-flow-viewport {
   perspective: 1200px;
   perspective-origin: 50% 50%;
@@ -2490,6 +2506,7 @@ table {
   -webkit-user-select: none;
   border-radius: var(--border-radius-lg);
   overflow: hidden;
+  touch-action: pan-y;
 }
 
 .cover-flow-ipod .cover-flow-viewport:active {
@@ -2589,7 +2606,7 @@ table {
   -webkit-box-reflect: unset;
 }
 
-/* Invisible inner container: no visual style, fills card for layout/hit area */
+/* Invisible inner container: cards (journey/features) live here — no visual chrome, layout/hit only */
 .cover-flow-card-inner {
   width: 100%;
   height: 100%;
@@ -2598,6 +2615,7 @@ table {
   background: transparent;
   border: none;
   box-sizing: border-box;
+  overflow: visible;
 }
 
 .cover-flow-card-wrap.is-center .cover-flow-card {
@@ -3042,6 +3060,13 @@ table {
   box-shadow: 0 0 0 2px var(--color-primary);
 }
 
+.cover-flow-dot:disabled,
+.cover-flow-dot-nav:disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+
 /* Mobile & reduced-motion: fewer animations, less GPU work */
 @media (prefers-reduced-motion: reduce), (max-width: 768px) {
   .differentiator-card {
@@ -3058,6 +3083,14 @@ table {
   }
   .cover-flow-card-wrap:not(.is-center) {
     contain: layout paint;
+  }
+  /* Features: non-center cards recede so center card reads clearly (no text overlap) */
+  .differentiators .cover-flow-card-wrap:not(.is-center) {
+    opacity: 0.55;
+  }
+  .differentiators .cover-flow-card-wrap.is-center {
+    z-index: 2;
+    isolation: isolate;
   }
 }
 
@@ -3099,6 +3132,20 @@ table {
 }
 
 @media (max-width: 768px) {
+  .carousel-invisible-container {
+    contain: layout style paint;
+    margin-bottom: var(--space-4);
+  }
+
+  .differentiators .carousel-invisible-container {
+    padding-bottom: var(--space-2);
+  }
+
+  .differentiators .cover-flow {
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-8);
+  }
+
   .cover-flow {
     min-height: min(680px, 88dvh);
     padding-left: 0;
@@ -3108,14 +3155,26 @@ table {
   .cover-flow-ipod .cover-flow-viewport {
     padding-left: var(--space-4);
     padding-right: var(--space-4);
-    min-height: min(580px, 75dvh);
-    height: min(580px, 75dvh);
+    min-height: min(520px, 68dvh);
+    height: min(520px, 68dvh);
+    max-height: min(560px, 72dvh);
+  }
+
+  .differentiators .cover-flow-ipod .cover-flow-viewport {
+    min-height: min(480px, 65dvh);
+    height: min(480px, 65dvh);
+    max-height: min(520px, 68dvh);
   }
 
   .cover-flow-card-wrap {
     width: 240px;
     min-height: min(540px, 68dvh);
     height: min(540px, 68dvh);
+  }
+
+  .differentiators .cover-flow-card-wrap {
+    min-height: min(420px, 56dvh);
+    height: min(420px, 56dvh);
   }
 
   .cover-flow-card {
@@ -3126,6 +3185,14 @@ table {
     margin-left: -30px;
   }
 
+  .differentiators .cover-flow-card {
+    width: min(280px, calc(100vw - 2rem));
+    min-height: min(400px, 54dvh);
+    height: min(400px, 54dvh);
+    max-height: min(440px, 58dvh);
+    margin-left: -24px;
+  }
+
   .cover-flow-card .differentiator-card .card-top {
     flex-wrap: wrap;
   }
@@ -3133,10 +3200,28 @@ table {
   .cover-flow-card .coordination-tools-grid {
     grid-template-columns: repeat(3, 1fr);
   }
+
+  .cover-flow-nav-wrap {
+    margin-top: var(--space-3);
+    padding-bottom: var(--space-2);
+  }
 }
 
-/* Small phones: fit carousel to narrow viewport */
+/* Small phones: fit carousel to narrow viewport, prevent overlay on other cards/sections */
 @media (max-width: 480px) {
+  .carousel-invisible-container {
+    margin-bottom: var(--space-3);
+  }
+
+  .differentiators {
+    padding-bottom: var(--space-16);
+  }
+
+  .differentiators .cover-flow {
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-6);
+  }
+
   .cover-flow {
     min-height: min(600px, 82dvh);
     padding: var(--space-4) 0 var(--space-8);
@@ -3145,8 +3230,15 @@ table {
   .cover-flow-ipod .cover-flow-viewport {
     padding-left: var(--space-2);
     padding-right: var(--space-2);
-    min-height: min(500px, 70dvh);
-    height: min(500px, 70dvh);
+    min-height: min(440px, 60dvh);
+    height: min(440px, 60dvh);
+    max-height: min(460px, 62dvh);
+  }
+
+  .differentiators .cover-flow-ipod .cover-flow-viewport {
+    min-height: min(380px, 52dvh);
+    height: min(380px, 52dvh);
+    max-height: min(400px, 54dvh);
   }
 
   .cover-flow-card-wrap {
@@ -3155,12 +3247,24 @@ table {
     height: min(460px, 64dvh);
   }
 
+  .differentiators .cover-flow-card-wrap {
+    min-height: min(360px, 50dvh);
+    height: min(360px, 50dvh);
+  }
+
   .cover-flow-card {
     width: min(280px, calc(100vw - 3rem));
     min-height: min(440px, 62dvh);
     height: min(440px, 62dvh);
     max-height: min(480px, 66dvh);
     margin-left: -40px;
+  }
+
+  .differentiators .cover-flow-card {
+    width: min(260px, calc(100vw - 2.5rem));
+    min-height: min(340px, 46dvh);
+    height: min(340px, 46dvh);
+    max-height: min(360px, 48dvh);
   }
 
   .journey .cover-flow-card {
@@ -4472,6 +4576,7 @@ table {
   position: relative;
   overflow: hidden;
   min-height: min(100vh, 720px);
+  min-height: min(100dvh, 720px);
   display: flex;
   align-items: center;
 }
@@ -4765,6 +4870,7 @@ table {
 /* Placeholder pages (Contact, Privacy Policy, Terms of Service) */
 .placeholder-page {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--color-bg-dark);
@@ -4988,6 +5094,7 @@ table {
 /* Partner Sign-In Page */
 .partner-signin-page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--color-bg-dark);
   color: var(--color-text-primary);
   display: flex;
@@ -5940,10 +6047,10 @@ table {
   }
 }
 
-/* Scroll Progress Bar: scaleX for compositor-only (smooth on iOS) */
+/* Scroll progress: compositor-only (scaleX), non-interactive, below safe area */
 .scroll-progress-bar {
   position: fixed;
-  top: 0;
+  top: var(--safe-top);
   left: 0;
   width: 100%;
   height: 3px;
@@ -5951,6 +6058,7 @@ table {
   z-index: 10000;
   transform-origin: left;
   transition: transform 0.15s linear;
+  pointer-events: none;
 }
 
 /* Particle System */

@@ -37,7 +37,7 @@ class ErrorBoundary extends React.Component {
             <button onClick={() => window.location.reload()} className="error-reset-button">
               Refresh Page
             </button>
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {typeof import.meta !== 'undefined' && import.meta.env?.DEV && this.state.error && (
               <details className="error-details">
                 <summary>Error Details (Development Only)</summary>
                 <pre>{this.state.error.toString()}</pre>

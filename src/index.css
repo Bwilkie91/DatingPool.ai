@@ -11,9 +11,10 @@ code {
     monospace;
 }
 
-/* Error boundary — always visible when React throws (App.css may not be loaded) */
+/* Error boundary — dvh for iOS/Android when status bar shows/hides */
 .error-boundary {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;

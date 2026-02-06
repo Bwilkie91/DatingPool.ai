@@ -95,6 +95,18 @@ function App() {
     rootMargin: '80px'
   })
 
+  const { ref: missionInViewRef, inView: missionInView } = useInView({
+    threshold: 0.05,
+    triggerOnce: true,
+    rootMargin: '100px'
+  })
+
+  const { ref: ctaInViewRef, inView: ctaInView } = useInView({
+    threshold: 0.05,
+    triggerOnce: true,
+    rootMargin: '100px'
+  })
+
   useEffect(() => {
     if (featuresInView && !featuresVideoReady) setFeaturesVideoReady(true)
   }, [featuresInView, featuresVideoReady])
@@ -151,6 +163,7 @@ function App() {
   const observerRef = useRef(null)
   const mobileMenuRef = useRef(null)
   const heroScrollHapticsFiredRef = useRef(new Set())
+  const userHasInteractedRef = useRef(false)
   const mobileMenuToggleRef = useRef(null)
   const waitlistFormRef = useRef(null)
 
@@ -244,45 +257,40 @@ function App() {
 
   useEffect(() => () => clearHeroSecondVideoTimer(), [clearHeroSecondVideoTimer])
 
-  // Smooth scroll handler with throttling
+  // Scroll handler: single read then batch updates (enterprise — passive listener, rAF-throttled)
   const handleScroll = useCallback(() => {
-    const currentScrollY = window.scrollY
+    const scrollY = window.scrollY
     const windowHeight = window.innerHeight
-    const documentHeight = document.documentElement.scrollHeight
-    const scrollableHeight = documentHeight - windowHeight
-    const progress = scrollableHeight > 0 ? (currentScrollY / scrollableHeight) * 100 : 0
+    const docHeight = document.documentElement.scrollHeight
+    const scrollable = Math.max(0, docHeight - windowHeight)
+    const progress = scrollable > 0 ? (scrollY / scrollable) * 100 : 0
 
-    setScrollY(currentScrollY)
-    setIsScrolled(currentScrollY > CONSTANTS.SCROLL_THRESHOLD)
+    setScrollY(scrollY)
+    setIsScrolled(scrollY > CONSTANTS.SCROLL_THRESHOLD)
     setScrollProgress(progress)
 
-    // Mobile: haptic feedback as user scrolls through the first page (hero)
-    const isMobile = typeof navigator !== 'undefined' && navigator.vibrate && window.innerWidth <= 768
-    if (isMobile && !prefersReducedMotion) {
+    // Mobile: haptic at hero thresholds only after user has interacted (avoids Chrome intervention)
+    if (userHasInteractedRef.current && typeof navigator !== 'undefined' && navigator.vibrate && window.innerWidth <= 768 && !prefersReducedMotion) {
       const fired = heroScrollHapticsFiredRef.current
-      if (currentScrollY < 40) {
-        fired.clear()
-      } else {
-        const thresholds = [0.25, 0.5, 0.75, 1].map((r) => Math.round(r * windowHeight))
-        thresholds.forEach((thresh) => {
-          if (currentScrollY >= thresh && !fired.has(thresh)) {
+      if (scrollY < 40) fired.clear()
+      else {
+        ;[0.25, 0.5, 0.75, 1].forEach((r) => {
+          const thresh = Math.round(r * windowHeight)
+          if (scrollY >= thresh && !fired.has(thresh)) {
             fired.add(thresh)
-            try {
-              navigator.vibrate(10)
-            } catch (_) {}
+            try { navigator.vibrate(10) } catch (_) {}
           }
         })
       }
     }
 
-    // Determine active section based on scroll position
-    const sections = ['journey', 'mission', 'features', 'coming-soon']
-    const scrollPosition = currentScrollY + windowHeight / 3
-
-    for (let i = sections.length - 1; i >= 0; i--) {
-      const section = document.getElementById(sections[i])
-      if (section && section.offsetTop <= scrollPosition) {
-        setActiveSection(sections[i])
+    // Active section from scroll position (single pass)
+    const viewportThird = scrollY + windowHeight / 3
+    const sectionIds = ['journey', 'mission', 'features', 'coming-soon']
+    for (let i = sectionIds.length - 1; i >= 0; i--) {
+      const el = document.getElementById(sectionIds[i])
+      if (el && el.offsetTop <= viewportThird) {
+        setActiveSection(sectionIds[i])
         break
       }
     }
@@ -366,8 +374,7 @@ function App() {
     setSubmitSuccess(false)
 
     try {
-      // Validate URL before opening
-      const waitlistUrl = 'https://forms.gle/your-waitlist-link'
+      const waitlistUrl = import.meta.env.VITE_WAITLIST_URL || 'https://forms.gle/your-waitlist-link'
       if (waitlistUrl && waitlistUrl.startsWith('http')) {
         // Simulate form submission delay
         await new Promise(resolve => setTimeout(resolve, 500))
@@ -393,18 +400,17 @@ function App() {
     }
   }, [email, validateEmail])
 
-  // Single source of truth for body scroll lock: runs after every commit so scroll never gets stuck.
-  // When menu is closed we always force scrollable; when menu is open we lock. Explicit 'auto' avoids browser quirks.
+  // Body scroll lock only when menu is open. When closed, clear overflow so viewport scrolls (fixes MacBook/Android).
   useLayoutEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden'
       document.body.classList.add('menu-open')
     } else {
-      document.body.style.overflow = 'auto'
+      document.body.style.overflow = ''
       document.body.classList.remove('menu-open')
     }
     return () => {
-      document.body.style.overflow = 'auto'
+      document.body.style.overflow = ''
       document.body.classList.remove('menu-open')
     }
   }, [isMobileMenuOpen])
@@ -482,6 +488,17 @@ function App() {
       document.removeEventListener('keydown', handleEscape)
     }
   }, [isMobileMenuOpen])
+
+  // Mark that user has interacted (required before navigator.vibrate in Chrome)
+  useEffect(() => {
+    const markInteracted = () => { userHasInteractedRef.current = true }
+    document.addEventListener('pointerdown', markInteracted, { once: true })
+    document.addEventListener('keydown', markInteracted, { once: true })
+    return () => {
+      document.removeEventListener('pointerdown', markInteracted)
+      document.removeEventListener('keydown', markInteracted)
+    }
+  }, [])
 
   // Animated event type rotation
   useEffect(() => {
@@ -782,11 +799,9 @@ function App() {
         </div>
       </header>
 
-      <main id="main-content" tabIndex={-1}>
-        {/* Scroll Progress Indicator */}
+      <main id="main-content" className="main-scroll-content" tabIndex={-1}>
         <div className="scroll-progress-bar" style={{ transform: `scaleX(${scrollProgress / 100})` }} aria-hidden="true" />
-        
-        <section className="hero" ref={heroRef} aria-label="Hero section">
+        <section className="hero page-section" ref={heroRef} aria-label="Hero section">
           <div className="hero-video-wrap" aria-hidden="true">
             {[0, 1].map((slot) => {
               const isVisible = (slot === heroActiveSlot && !heroTransitioning) || (slot !== heroActiveSlot && heroTransitioning)
@@ -958,7 +973,7 @@ function App() {
           </div>
         </section>
 
-        <section id="journey" className="journey" aria-label="How it works" ref={(el) => { journeySectionRef.current = el; journeyInViewRef(el); }}>
+        <section id="journey" className="journey page-section" aria-label="How it works" ref={(el) => { journeySectionRef.current = el; journeyInViewRef(el); }}>
           <div className="journey-video-wrap" aria-hidden="true">
             <video
               className="journey-video"
@@ -979,12 +994,13 @@ function App() {
               Four steps from "nothing to do" to a real date at a real place.
             </p>
             <p className="journey-carousel-intro animate-on-scroll">Swipe to see each step.</p>
-            <CoverFlowCarousel
-              activeIndex={journeyCardIndex}
-              setActiveIndex={setJourneyCardIndex}
-              ariaLabel="How it works steps"
-              slideLabel="step"
-            >
+            <div className="carousel-invisible-container" data-carousel="journey">
+              <CoverFlowCarousel
+                activeIndex={journeyCardIndex}
+                setActiveIndex={setJourneyCardIndex}
+                ariaLabel="How it works steps"
+                slideLabel="step"
+              >
               <motion.article className="journey-card differentiator-card interactive-card" role="listitem" data-step="1" {...cardMotionProps}>
                 <div className="card-top">
                   <div className="feature-icon-wrapper">
@@ -1049,20 +1065,21 @@ function App() {
                   </div>
                 </div>
               </motion.article>
-            </CoverFlowCarousel>
+              </CoverFlowCarousel>
+            </div>
           </div>
         </section>
 
-        <section id="mission" className="mission" aria-label="Our Mission">
+        <section id="mission" className="mission page-section" aria-label="Our Mission" ref={missionInViewRef}>
           <div className="mission-video-wrap" aria-hidden="true">
             <video
               className="mission-video"
-              src={pool5VideoSrc}
+              src={missionInView ? pool5VideoSrc : undefined}
               autoPlay
               loop
               muted
               playsInline
-              preload="auto"
+              preload="none"
             />
             <div className="mission-video-overlay" />
           </div>
@@ -1149,7 +1166,7 @@ function App() {
           </div>
         </section>
 
-        <section id="features" className="differentiators" aria-label="Features" ref={featuresSectionRef}>
+        <section id="features" className="differentiators page-section" aria-label="Features" ref={featuresSectionRef}>
           <div className={`differentiators-video-wrap ${!featuresVideoReady ? 'differentiators-video-placeholder' : ''}`} aria-hidden="true">
             {featuresVideoReady && (
               <video
@@ -1190,7 +1207,8 @@ function App() {
               </div>
               <p className="features-carousel-intro animate-on-scroll">Swipe to see what makes us different.</p>
             </div>
-            <CoverFlowCarousel activeIndex={featureCardIndex} setActiveIndex={setFeatureCardIndex}>
+            <div className="carousel-invisible-container" data-carousel="features">
+              <CoverFlowCarousel activeIndex={featureCardIndex} setActiveIndex={setFeatureCardIndex}>
               <motion.article 
                 className="differentiator-card feature-card-featured interactive-card" 
                 role="listitem"
@@ -1201,10 +1219,10 @@ function App() {
                   <div className="feature-icon-wrapper">
                     <div className="diff-icon" aria-hidden="true"><Icon name="checkCircle" className="diff-icon-svg" /></div>
                   </div>
-                  <div className="stat-badge stat-badge-success">0 Planning Friction</div>
+                  <div className="stat-badge stat-badge-success">The Anti–"Where Should We Meet?"</div>
                 </div>
                 <div className="card-content">
-                  <h3>No more "where should we meet?"</h3>
+                  <h3>Zero planning. Real icebreakers. People who show up.</h3>
                   <div className="visual-timeline">
                     <div className="timeline-item">
                       <span className="timeline-icon"><Icon name="calendar" className="timeline-icon-svg" /></span>
@@ -1217,68 +1235,16 @@ function App() {
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
-                      <span className="timeline-icon"><Icon name="mapPin" className="timeline-icon-svg" /></span>
-                      <span>Venue + time set</span>
+                      <span className="timeline-icon"><Icon name="message" className="timeline-icon-svg" /></span>
+                      <span>Match + chat</span>
                     </div>
                     <div className="timeline-arrow">→</div>
                     <div className="timeline-item">
                       <span className="timeline-icon"><Icon name="hand" className="timeline-icon-svg" /></span>
-                      <span>Meet</span>
+                      <span>Show up</span>
                     </div>
                   </div>
-                  <p>Find events, join the pool (no ticket required), and show up. The event is the date.</p>
-                </div>
-              </motion.article>
-              <motion.article 
-                className="differentiator-card interactive-card" 
-                role="listitem"
-                data-feature="matching"
-                {...cardMotionProps}
-              >
-                <div className="card-top">
-                  <div className="feature-icon-wrapper">
-                    <div className="diff-icon" aria-hidden="true"><Icon name="message" className="diff-icon-svg" /></div>
-                  </div>
-                  <div className="stat-badge stat-badge-blue">100% Built-in Icebreakers</div>
-                </div>
-                <div className="card-content">
-                  <h3>Built-in icebreakers</h3>
-                  <div className="visual-comparison">
-                    <div className="comparison-bad">
-                      <span className="comparison-label">Elsewhere</span>
-                      <span className="comparison-text">"Hey"</span>
-                    </div>
-                    <div className="comparison-arrow-small">→</div>
-                    <div className="comparison-good">
-                      <span className="comparison-label">Here</span>
-                      <span className="comparison-text">"See you at the concert?"</span>
-                    </div>
-                  </div>
-                  <p>Every match shares an event. Real conversation starters, not openers from nowhere.</p>
-                </div>
-              </motion.article>
-              <motion.article 
-                className="differentiator-card interactive-card" 
-                role="listitem"
-                data-feature="intent"
-                {...cardMotionProps}
-              >
-                <div className="card-top">
-                  <div className="feature-icon-wrapper">
-                    <div className="diff-icon" aria-hidden="true"><Icon name="target" className="diff-icon-svg" /></div>
-                  </div>
-                  <div className="stat-badge stat-badge-orange">3x Higher Intent</div>
-                </div>
-                <div className="card-content">
-                  <h3>People who show up</h3>
-                  <div className="intent-meter">
-                    <div className="meter-label">Intent</div>
-                    <div className="meter-bar">
-                      <div className="meter-fill" style={{ width: '95%' }}></div>
-                    </div>
-                    <div className="meter-value">95% committed to the event</div>
-                  </div>
-                  <p>Joining a pool means intent. No serial swipers—everyone's planning to be there.</p>
+                  <p>The event <em>is</em> the date—venue and time are already set. Your opener writes itself (&quot;See you there?&quot; beats &quot;Hey&quot; every time), and everyone in the pool is actually going. No planning paralysis, no ghosting into the void.</p>
                 </div>
               </motion.article>
               <motion.article 
@@ -1606,21 +1572,22 @@ function App() {
                   </div>
                 </div>
               </motion.article>
-            </CoverFlowCarousel>
+              </CoverFlowCarousel>
+            </div>
           </div>
         </section>
 
 
-        <section id="coming-soon" className="cta" aria-label="Join waitlist">
+        <section id="coming-soon" className="cta page-section" aria-label="Join waitlist" ref={ctaInViewRef}>
           <div className="cta-video-wrap" aria-hidden="true">
             <video
               className="cta-video"
-              src={pool3VideoSrc}
+              src={ctaInView ? pool3VideoSrc : undefined}
               autoPlay
               loop
               muted
               playsInline
-              preload="auto"
+              preload="none"
             />
             <div className="cta-video-overlay" />
           </div>

@@ -281,18 +281,50 @@ export function CoverFlowCarousel({ children, activeIndex, setActiveIndex, ariaL
           role="tablist"
           aria-label={`${slideLabel} slides`}
         >
-          {cards.map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              role="tab"
-              aria-selected={i === activeIndex}
-              aria-label={`Go to ${slideLabel} ${i + 1} of ${count}`}
-              className={`cover-flow-dot ${i === activeIndex ? 'active' : ''}`}
-              onClick={(e) => { e.stopPropagation(); goToIndex(i); }}
-              onPointerDown={(e) => e.stopPropagation()}
-            />
-          ))}
+          {count <= 3 ? (
+            cards.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                role="tab"
+                aria-selected={i === activeIndex}
+                aria-label={`Go to ${slideLabel} ${i + 1} of ${count}`}
+                className={`cover-flow-dot ${i === activeIndex ? 'active' : ''}`}
+                onClick={(e) => { e.stopPropagation(); goToIndex(i); }}
+                onPointerDown={(e) => e.stopPropagation()}
+              />
+            ))
+          ) : (
+            <>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={false}
+                aria-label={`Previous ${slideLabel}`}
+                className="cover-flow-dot cover-flow-dot-nav"
+                onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                disabled={activeIndex === 0}
+              />
+              <button
+                type="button"
+                role="tab"
+                aria-selected={true}
+                aria-label={`${slideLabel} ${activeIndex + 1} of ${count}`}
+                className="cover-flow-dot active"
+              />
+              <button
+                type="button"
+                role="tab"
+                aria-selected={false}
+                aria-label={`Next ${slideLabel}`}
+                className="cover-flow-dot cover-flow-dot-nav"
+                onClick={(e) => { e.stopPropagation(); goNext(); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                disabled={activeIndex === count - 1}
+              />
+            </>
+          )}
         </div>
         <button
           type="button"
